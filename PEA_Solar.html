@@ -1,0 +1,3719 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PEA EasyD — AI-Enabled Engineering Design and Project Management of Solar PV Systems</title>
+<style>
+:root{
+  --graphite:#1B1F27;
+  --graphite-2:#242A35;
+  --panel:#F7F5F0;
+  --paper:#FFFFFF;
+  --ink:#20242C;
+  --ink-soft:#5B6270;
+  --line:#DAD6CC;
+  --line-dark:#3A4150;
+  --amber:#5B2582;
+  --amber-dark:#431A5E;
+  --teal:#F58220;
+  --teal-dark:#C9660D;
+  --danger:#C64B3C;
+  --ok:#3D8A5F;
+  --font-head:'Segoe UI Semibold','Inter',system-ui,sans-serif;
+  --font-body:'Segoe UI','Inter',system-ui,sans-serif;
+  --font-mono:'Consolas','Roboto Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--panel);color:var(--ink);font-family:var(--font-body);}
+body{min-height:100vh;}
+.app{display:flex;min-height:100vh;}
+
+/* ---------- SIDEBAR / SCHEMATIC STEPPER ---------- */
+.sidebar{
+  width:260px;flex:0 0 260px;background:var(--paper);
+  color:var(--ink);padding:28px 18px;position:sticky;top:0;height:100vh;
+  overflow-y:auto;border-right:1px solid var(--line);box-shadow:2px 0 14px rgba(27,31,39,.04);
+}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.brand-mark{width:30px;height:30px;flex:0 0 30px;}
+.brand-title{font-family:var(--font-head);font-size:19px;font-weight:700;letter-spacing:.02em;line-height:1.15;color:var(--ink);}
+.brand-sub{font-size:10.5px;color:var(--ink-soft);letter-spacing:.02em;line-height:1.45;margin-bottom:26px;margin-top:5px;}
+
+.stepper{position:relative;padding-left:0;}
+.step{position:relative;padding:11px 12px 11px 46px;margin-bottom:5px;border-radius:10px;cursor:pointer;transition:.15s;}
+.step:last-child{margin-bottom:0;}
+.step:hover:not(.locked):not(.active){background:var(--panel);}
+.step.active{background:#F3EDF8;box-shadow:inset 3px 0 0 var(--amber);}
+.step .rail{position:absolute;left:25px;top:39px;bottom:-5px;width:2px;background:var(--line);}
+.step:last-child .rail{display:none;}
+.step .node{
+  position:absolute;left:14px;top:11px;width:22px;height:22px;border-radius:50%;
+  border:2px solid #D6D2C7;background:#fff;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-mono);font-size:10px;font-weight:700;color:var(--ink-soft);transition:.2s;
+}
+.step.active .node{border-color:var(--amber);background:var(--amber);color:#fff;box-shadow:0 0 0 4px rgba(91,37,130,.15);}
+.step.done .node{border-color:var(--teal);background:var(--teal);color:#fff;font-size:11px;}
+.step.done .rail{background:var(--teal);}
+.step .label{font-size:13px;color:var(--ink);line-height:1.3;font-weight:500;}
+.step.active .label{color:var(--amber);font-weight:700;}
+.step.done .label{color:var(--ink);}
+.step .sub{font-size:10.5px;color:var(--ink-soft);margin-top:1px;}
+.step.locked{cursor:not-allowed;opacity:.5;}
+.step.locked:hover{background:transparent;}
+
+.sidebar-footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--line);font-size:10.5px;color:var(--ink-soft);line-height:1.5;}
+.io-btns{display:flex;gap:6px;margin-top:10px;}
+.io-btns button{flex:1;font-size:10.5px;padding:6px 4px;background:#fff;color:var(--ink-soft);border:1px solid var(--line);border-radius:5px;cursor:pointer;font-family:var(--font-body);}
+.io-btns button:hover{background:var(--panel);color:var(--ink);}
+
+.excel-panel{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);}
+.excel-panel .ep-title{font-size:10.5px;color:var(--ink-soft);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px;}
+.excel-drop{
+  border:1.5px dashed var(--line);border-radius:8px;padding:14px 10px;text-align:center;cursor:pointer;
+  color:var(--ink-soft);font-size:11px;line-height:1.5;transition:.15s;background:var(--panel);
+}
+.excel-drop:hover, .excel-drop.dragover{border-color:var(--amber);color:var(--ink);background:#F3EDF8;}
+.excel-drop .ic{font-size:18px;display:block;margin-bottom:4px;}
+.excel-file-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--ink-soft);}
+.excel-file-card .fname{font-family:var(--font-mono);font-weight:700;color:var(--ink);word-break:break-all;font-size:11px;}
+.excel-file-card .fmeta{color:var(--ink-soft);margin-top:3px;font-size:10.5px;}
+.excel-file-card .fbtns{display:flex;gap:6px;margin-top:8px;}
+.excel-file-card .fbtns button{flex:1;font-size:10px;padding:5px 4px;border-radius:5px;cursor:pointer;font-family:var(--font-body);border:1px solid var(--line);background:#fff;color:var(--ink-soft);}
+.excel-file-card .fbtns button:hover{background:var(--panel);}
+.excel-file-card .fbtns button.danger{border-color:#E3B3AA;color:#B23B2A;}
+.excel-file-card .fbtns button.danger:hover{background:#FBEAE7;}
+.excel-status{margin-top:8px;font-size:10.5px;padding:8px 10px;border-radius:6px;line-height:1.5;}
+.excel-status.ok{background:#EAF7EE;color:#1F6B3B;border:1px solid #BFE3C9;}
+.excel-status.err{background:#FDEDEB;color:#B23B2A;border:1px solid #F3C4BA;}
+.excel-status.warn{background:#FFF6E4;color:#92680B;border:1px solid #F0DBA0;}
+
+/* ---------- MAIN ---------- */
+.main{flex:1;background:var(--panel);min-width:0;}
+.topbar{
+  background:var(--paper);border-bottom:1px solid var(--line);padding:16px 36px;
+  display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;
+}
+.topbar h1{font-family:var(--font-head);font-size:18px;margin:0;color:var(--ink);}
+.topbar .crumb{font-size:11.5px;color:var(--ink-soft);font-family:var(--font-mono);letter-spacing:.03em;margin-top:2px;}
+.content{padding:34px 36px 80px;max-width:1080px;}
+.page{display:none;}
+.page.active{display:block;animation:fade .25s ease;}
+@keyframes fade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+h2.page-title{font-family:var(--font-head);font-size:24px;margin:0 0 4px;color:var(--ink);}
+p.page-desc{color:var(--ink-soft);font-size:13.5px;margin:0 0 26px;max-width:640px;line-height:1.55;}
+
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:22px 24px;margin-bottom:18px;}
+.card h3{font-family:var(--font-head);font-size:14px;margin:0 0 14px;color:var(--ink);text-transform:uppercase;letter-spacing:.04em;}
+.card h3 span{color:var(--ink-soft);text-transform:none;letter-spacing:0;font-weight:400;font-size:12px;}
+
+/* system type cards */
+.sys-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.sys-card{
+  background:var(--paper);border:2px solid var(--line);border-radius:12px;padding:22px 18px;cursor:pointer;
+  text-align:center;transition:.15s;
+}
+.sys-card:hover{border-color:var(--amber);transform:translateY(-2px);}
+.sys-card.selected{border-color:var(--amber);background:#F3EDF8;}
+.sys-card .icon{width:46px;height:46px;margin:0 auto 12px;}
+.sys-card .name{font-family:var(--font-head);font-size:15px;color:var(--ink);}
+.sys-card .desc{font-size:11.5px;color:var(--ink-soft);margin-top:4px;line-height:1.4;}
+
+/* form grid */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field.full{grid-column:1/-1;}
+.field label{font-size:12px;color:var(--ink-soft);font-weight:600;}
+.field .hint{font-size:10.5px;color:#9A9284;}
+input[type=text],input[type=number],select{
+  font-family:var(--font-mono);font-size:13px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;
+  background:#FCFBF8;color:var(--ink);
+}
+input:focus,select:focus{outline:2px solid var(--amber);outline-offset:0;border-color:var(--amber);}
+.radio-row{display:flex;gap:10px;}
+.radio-opt{flex:1;border:1px solid var(--line);border-radius:6px;padding:10px;text-align:center;cursor:pointer;font-size:13px;font-weight:600;color:var(--ink-soft);}
+.radio-opt.selected{border-color:var(--teal);background:#FDECDD;color:var(--teal-dark);}
+
+/* buttons */
+.btn{
+  font-family:var(--font-body);font-weight:600;font-size:13.5px;padding:11px 22px;border-radius:7px;border:none;
+  cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:.15s;
+}
+.btn-primary{background:var(--ink);color:#fff;}
+.btn-primary:hover{background:#000;}
+.btn-primary:disabled{background:#C9C6BC;cursor:not-allowed;}
+.btn-amber{background:var(--amber);color:#1B1F27;}
+.btn-amber:hover{background:var(--amber-dark);color:#fff;}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink);}
+.btn-ghost:hover{background:#EFECE3;}
+.btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);}
+.btn-danger:hover{background:var(--danger);color:#fff;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.actions-row{display:flex;justify-content:space-between;align-items:center;margin-top:26px;}
+.actions-row .right{display:flex;gap:10px;}
+
+/* brand grid */
+.brand-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.brand-card{border:2px solid var(--line);border-radius:10px;padding:16px 10px;text-align:center;cursor:pointer;background:var(--paper);}
+.brand-card:hover{border-color:var(--amber);}
+.brand-card.selected{border-color:var(--amber);background:#F3EDF8;}
+.brand-card .bname{font-family:var(--font-head);font-size:14px;}
+.brand-card .bcount{font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
+.brand-card.disabled{opacity:.35;cursor:not-allowed;}
+
+/* package list */
+.pkg-list{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.pkg-card{border:1px solid var(--line);border-radius:10px;padding:14px 16px;cursor:pointer;background:var(--paper);position:relative;}
+.pkg-card:hover{border-color:var(--teal);}
+.pkg-card.selected{border-color:var(--teal);background:#FEF3E9;box-shadow:0 0 0 2px rgba(245,130,32,.15);}
+.pkg-card .model{font-family:var(--font-mono);font-weight:700;font-size:13.5px;}
+.pkg-card .meta{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+.pkg-card .tag{display:inline-block;font-size:9.5px;font-weight:700;letter-spacing:.05em;padding:2px 7px;border-radius:20px;background:var(--graphite);color:#fff;margin-right:5px;}
+.pkg-card .tag.custom{background:var(--amber);color:#1B1F27;}
+.pkg-card .del{position:absolute;top:10px;right:10px;font-size:11px;color:var(--danger);background:none;border:none;cursor:pointer;}
+
+/* detail table */
+.dtable{width:100%;border-collapse:collapse;font-size:12.5px;}
+.dtable td, .dtable th{border-bottom:1px solid var(--line);padding:8px 6px;text-align:left;}
+.dtable th{color:var(--ink-soft);font-weight:600;width:38%;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;}
+.dtable input{width:100%;border:1px solid transparent;background:transparent;font-family:var(--font-mono);font-size:12.5px;padding:4px 6px;border-radius:4px;}
+.dtable input:hover{border-color:var(--line);background:#FCFBF8;}
+.dtable input:focus{border-color:var(--amber);background:#fff;}
+.section-tag{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--teal-dark);margin:16px 0 4px;}
+
+/* summary */
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.sum-block h4{font-family:var(--font-head);font-size:13px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);margin:0 0 10px;border-bottom:2px solid var(--line);padding-bottom:6px;}
+.sum-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px dashed var(--line);}
+.sum-row .k{color:var(--ink-soft);}
+.sum-row .v{font-family:var(--font-mono);font-weight:600;}
+
+/* calc results */
+.calc-group{margin-bottom:22px;}
+.calc-group .ghead{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.calc-group .gicon{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-weight:700;font-size:12px;color:#fff;}
+.gicon.ac{background:var(--teal-dark);}
+.gicon.dc{background:var(--amber-dark);}
+.gicon.batt{background:#C9660D;}
+.calc-group .gtitle{font-family:var(--font-head);font-size:14.5px;}
+.calc-table{width:100%;border-collapse:collapse;}
+.calc-table td{padding:9px 8px;border-bottom:1px solid var(--line);font-size:13px;}
+.calc-table td:first-child{color:var(--ink-soft);width:42%;}
+.calc-table td:last-child{font-family:var(--font-mono);font-weight:700;}
+.note-list{margin-top:8px;}
+.note{font-size:12px;padding:8px 12px;border-radius:6px;margin-bottom:6px;display:flex;gap:8px;align-items:flex-start;}
+.note.warn{background:#FDF2E9;color:#8A4B12;border:1px solid #F0C989;}
+.note.ok{background:#EAF6EE;color:#1F6B3C;border:1px solid #B7E0C4;}
+.note.info{background:#EFF6FB;color:#1F5A8A;border:1px solid #BEDAEE;}
+
+/* SLD */
+.sld-wrap{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px;overflow-x:auto;}
+
+/* report */
+.report{background:#fff;border:1px solid var(--line);border-radius:4px;padding:44px 48px;}
+.report h2{font-family:var(--font-head);}
+.report .rhead{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid var(--ink);padding-bottom:16px;margin-bottom:6px;position:relative;}
+.report .rhead:after{content:'';position:absolute;left:0;right:0;bottom:-3px;height:3px;background:linear-gradient(90deg,var(--amber) 0 72px,transparent 72px);}
+.report .rhead .logo{font-family:var(--font-head);font-size:22px;letter-spacing:.01em;}
+.report .rhead .tagline{font-size:11.5px;color:var(--ink-soft);margin-top:5px;max-width:360px;line-height:1.55;}
+.report .rhead .meta{text-align:right;font-size:11px;color:var(--ink-soft);font-family:var(--font-mono);line-height:1.8;}
+.report .rhead .meta b{color:var(--ink);font-weight:700;}
+.report table{width:100%;border-collapse:collapse;margin-bottom:18px;}
+.report table td,.report table th{border:1px solid var(--line);padding:7px 9px;font-size:12px;}
+.report table th{background:#F4F1EA;text-align:left;}
+.report h3.rsec{
+  font-family:var(--font-head);font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink);
+  display:flex;align-items:center;gap:10px;margin:30px 0 14px;padding-bottom:9px;border-bottom:2px solid var(--line);
+}
+.report h3.rsec:first-of-type{margin-top:24px;}
+.report h3.rsec .rnum{
+  width:22px;height:22px;border-radius:50%;background:var(--graphite);color:#fff;flex:0 0 22px;
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:11px;
+}
+
+/* section 1 — spec strip */
+.rspec-strip{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:8px;overflow:hidden;page-break-inside:avoid;}
+.rspec-item{padding:13px 16px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:#FCFBF8;}
+.rspec-item:nth-child(3n){border-right:none;}
+.rspec-item:nth-last-child(-n+3){border-bottom:none;}
+.rspec-item .rk{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:5px;}
+.rspec-item .rv{font-family:var(--font-mono);font-weight:700;font-size:15px;color:var(--ink);}
+
+/* section 2 — equipment record cards */
+.req-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-bottom:14px;}
+.req-card{border:1px solid var(--line);border-radius:8px;overflow:hidden;page-break-inside:avoid;}
+.req-card .rc-head{padding:9px 14px;font-family:var(--font-head);font-size:12.5px;color:#fff;letter-spacing:.02em;}
+.req-card.inv .rc-head{background:var(--teal-dark);}
+.req-card.batt .rc-head{background:#C9660D;}
+.req-card.pv .rc-head{background:var(--teal-dark);}
+.req-card .rc-body{padding:4px 14px;}
+.req-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:11.5px;}
+.req-row:last-child{border-bottom:none;}
+.req-row .rk{color:var(--ink-soft);}
+.req-row .rv{font-family:var(--font-mono);font-weight:600;text-align:right;}
+
+.rstring-strip{border:1px solid var(--line);border-radius:8px;padding:13px 16px;background:#F7F5F0;display:flex;flex-wrap:wrap;gap:8px 26px;font-size:12px;page-break-inside:avoid;}
+.rstring-strip .rk{color:var(--ink-soft);margin-right:6px;}
+.rstring-strip .rv{font-family:var(--font-mono);font-weight:700;}
+
+/* section 3 — procurement groups */
+.rgroup{border:1px solid var(--line);border-left:4px solid var(--line);border-radius:8px;margin-bottom:14px;overflow:hidden;page-break-inside:avoid;}
+.rgroup.ac{border-left-color:var(--teal-dark);}
+.rgroup.dc{border-left-color:var(--amber-dark);}
+.rgroup.batt{border-left-color:#C9660D;}
+.rgroup .rg-head{display:flex;align-items:center;gap:8px;padding:9px 14px;background:#F4F1EA;font-family:var(--font-head);font-size:12px;text-transform:uppercase;letter-spacing:.04em;}
+.rgroup.ac .rg-head{color:var(--teal-dark);}
+.rgroup.dc .rg-head{color:var(--amber-dark);}
+.rgroup.batt .rg-head{color:#C9660D;}
+.rgroup .rg-head .rg-count{margin-left:auto;font-family:var(--font-mono);font-weight:400;color:var(--ink-soft);text-transform:none;letter-spacing:0;font-size:10.5px;}
+.ritem{display:flex;align-items:center;gap:14px;padding:10px 14px;border-top:1px solid var(--line);}
+.ritem .ri-name{flex:0 0 190px;font-size:12.5px;font-weight:600;color:var(--ink);}
+.ritem .ri-spec{flex:1;font-family:var(--font-mono);font-size:11.5px;color:var(--ink-soft);}
+.ritem .ri-qty{flex:0 0 auto;font-family:var(--font-mono);font-weight:700;font-size:12px;background:var(--graphite);color:#fff;padding:3px 11px;border-radius:20px;min-width:40px;text-align:center;}
+
+/* signature block */
+
+.rfoot-note{font-size:10.5px;color:#9A9284;margin-top:22px;border-top:1px solid var(--line);padding-top:12px;line-height:1.65;}
+
+.empty{padding:30px;text-align:center;color:var(--ink-soft);font-size:13px;border:1px dashed var(--line);border-radius:10px;background:#FBFAF6;}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(20,22,27,.55);display:none;align-items:center;justify-content:center;z-index:50;padding:20px;}
+.modal-bg.show{display:flex;}
+.modal{background:#fff;border-radius:12px;padding:26px 28px;max-width:720px;width:100%;max-height:88vh;overflow-y:auto;}
+.modal h3{font-family:var(--font-head);margin-top:0;}
+
+@media print{
+  .sidebar,.topbar,.actions-row,.no-print{display:none !important;}
+  .main{background:#fff;}
+  .content{padding:0;max-width:none;}
+  .page{display:none !important;}
+  .page.print-active{display:block !important;}
+  body{background:#fff;}
+  .report{border:none;border-radius:0;padding:0 4mm;}
+  .report h3.rsec{break-after:avoid;}
+}
+
+@media (max-width: 900px){
+  .sidebar{display:none;}
+  .form-grid,.sum-grid,.pkg-list{grid-template-columns:1fr;}
+  .sys-grid{grid-template-columns:1fr;}
+  .brand-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR STEPPER (schematic style) -->
+  <aside class="sidebar no-print">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="none" stroke="#5B2582" stroke-width="2.5"/><path d="M20 8 L20 14 M20 26 L20 32 M8 20 L14 20 M26 20 L32 20" stroke="#5B2582" stroke-width="2.5" stroke-linecap="round"/><circle cx="20" cy="20" r="6" fill="#5B2582"/></svg>
+      <div class="brand-title">PEA EasyD</div>
+    </div>
+    <div class="brand-sub">AI-Enabled Engineering Design and Project Management of Solar PV Systems</div>
+
+    <div class="stepper" id="stepper"></div>
+
+    <div class="excel-panel" id="excelImportPanel"><!-- rendered by renderExcelImportPanel() --></div>
+
+    <div class="sidebar-footer">
+      โครงการข้อมูลจะถูกเก็บไว้ในหน่วยความจำของเซสชันนี้เท่านั้น ใช้ Export เพื่อบันทึกไฟล์โปรเจกต์
+      <div class="io-btns">
+        <button onclick="exportProject()">⭳ Export JSON</button>
+        <button onclick="document.getElementById('importFile').click()">⭱ Import JSON</button>
+      </div>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importProject(event)">
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="pageHeading">เลือกประเภทระบบ</h1>
+        <div class="crumb" id="crumb">STEP 1 / 7 — SYSTEM TYPE</div>
+      </div>
+      <div class="crumb" id="topSummary"></div>
+    </div>
+    <div class="content" id="content"><!-- pages injected by JS --></div>
+  </main>
+</div>
+
+<!-- ADD PACKAGE MODAL -->
+<div class="modal-bg" id="addModalBg">
+  <div class="modal">
+    <h3>เพิ่มแพ็คเก็จใหม่</h3>
+    <p style="font-size:12.5px;color:var(--ink-soft);margin-top:-8px;">กรอกข้อมูลให้ครบตามคอลัมน์ในตาราง แพ็คเก็จนี้จะถูกบันทึกไว้ในระบบและเลือกใช้งานได้ทันที</p>
+    <div class="form-grid" id="addForm"></div>
+    <div class="actions-row">
+      <button class="btn btn-ghost" onclick="closeAddModal()">ยกเลิก</button>
+      <button class="btn btn-amber" onclick="saveNewPackage()">บันทึกแพ็คเก็จ</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* dxf-writer v1.18.4 (MIT) — bundled inline so the CAD export works fully offline.
+   Produces a spec-complete AutoCAD DXF (proper HEADER/$HANDSEED, entity handles,
+   BLOCK_RECORD/Model_Space wiring) which is what real AutoCAD-family software
+   (AutoCAD, DWG TrueView) requires to render on open — a hand-rolled minimal DXF
+   without these parses fine in lenient readers but can open blank in AutoCAD itself. */
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.DxfWriter = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+module.exports = require('./src/Drawing');
+},{"./src/Drawing":11}],2:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class AppId extends DatabaseObject {
+    constructor(name) {
+        super(["AcDbSymbolTableRecord", "AcDbRegAppTableRecord"]);
+        this.name = name;
+    }
+
+    tags(manager) {
+        manager.push(0, "APPID");
+        super.tags(manager);
+        manager.push(2, this.name);
+        /* No flags set */
+        manager.push(70, 0);
+    }
+}
+
+module.exports = AppId;
+
+},{"./DatabaseObject":8}],3:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Arc extends DatabaseObject {
+    /**
+     * @param {number} x - Center x
+     * @param {number} y - Center y
+     * @param {number} r - radius
+     * @param {number} startAngle - degree
+     * @param {number} endAngle - degree
+     */
+    constructor(x, y, r, startAngle, endAngle) {
+        super(["AcDbEntity", "AcDbCircle"]);
+        this.x = x;
+        this.y = y;
+        this.r = r;
+        this.startAngle = startAngle;
+        this.endAngle = endAngle;
+    }
+
+    tags(manager) {
+        //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/line_al_u05_c.htm
+        manager.push(0, "ARC");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.point(this.x, this.y);
+        manager.push(40, this.r);
+        manager.push(100, "AcDbArc");
+        manager.push(50, this.startAngle);
+        manager.push(51, this.endAngle);
+    }
+}
+
+module.exports = Arc;
+
+},{"./DatabaseObject":8}],4:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Block extends DatabaseObject {
+    constructor(name) {
+        super(["AcDbEntity", "AcDbBlockBegin"]);
+        this.name = name;
+        this.end = new DatabaseObject(["AcDbEntity", "AcDbBlockEnd"]);
+        this.recordHandle = null;
+    }
+
+    tags(manager) {
+        manager.push(0, "BLOCK");
+        super.tags(manager);
+        manager.push(2, this.name);
+        /* No flags set */
+        manager.push(70, 0);
+        /* Block top left corner */
+        manager.point(0, 0);
+        manager.push(3, this.name);
+        /* xref path name - nothing */
+        manager.push(1, "");
+
+        //XXX dump content here
+
+        manager.push(0, "ENDBLK");
+        this.end.tags(manager);
+    }
+}
+
+module.exports = Block;
+
+},{"./DatabaseObject":8}],5:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class BlockRecord extends DatabaseObject {
+    constructor(name) {
+        super(["AcDbSymbolTableRecord", "AcDbBlockTableRecord"]);
+        this.name = name;
+    }
+
+    tags(manager) {
+        manager.push(0, "BLOCK_RECORD");
+        super.tags(manager);
+        manager.push(2, this.name);
+        /* No flags set */
+        manager.push(70, 0);
+        /* Block explodability */
+        manager.push(280, 0);
+        /* Block scalability */
+        manager.push(281, 1);
+    }
+}
+
+module.exports = BlockRecord;
+
+},{"./DatabaseObject":8}],6:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Circle extends DatabaseObject {
+    /**
+     * @param {number} x - Center x
+     * @param {number} y - Center y
+     * @param {number} r - radius
+     */
+    constructor(x, y, r) {
+        super(["AcDbEntity", "AcDbCircle"]);
+        this.x = x;
+        this.y = y;
+        this.r = r;
+    }
+
+    tags(manager) {
+        //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/circle_al_u05_c.htm
+        manager.push(0, "CIRCLE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.point(this.x, this.y);
+        manager.push(40, this.r);
+    }
+}
+
+module.exports = Circle;
+
+},{"./DatabaseObject":8}],7:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Cylinder extends DatabaseObject {
+    /**
+     * @param {number} x - Center x
+     * @param {number} y - Center y
+     * @param {number} z - Center z
+     * @param {number} r - radius
+     * @param {number} thickness - thickness
+     * @param {number} extrusionDirectionX - Extrusion Direction x
+     * @param {number} extrusionDirectionY - Extrusion Direction y
+     * @param {number} extrusionDirectionZ - Extrusion Direction z
+     */
+    constructor(
+        x,
+        y,
+        z,
+        r,
+        thickness,
+        extrusionDirectionX,
+        extrusionDirectionY,
+        extrusionDirectionZ
+    ) {
+        super(["AcDbEntity", "AcDbCircle"]);
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.r = r;
+        this.thickness = thickness;
+        (this.extrusionDirectionX = extrusionDirectionX),
+            (this.extrusionDirectionY = extrusionDirectionY),
+            (this.extrusionDirectionZ = extrusionDirectionZ);
+    }
+
+    tags(manager) {
+        manager.push(0, "CIRCLE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.point(this.x, this.y, this.z);
+        manager.push(40, this.r);
+        manager.push(39, this.thickness);
+        manager.push(210, this.extrusionDirectionX);
+        manager.push(220, this.extrusionDirectionY);
+        manager.push(230, this.extrusionDirectionZ);
+    }
+}
+
+module.exports = Cylinder;
+
+},{"./DatabaseObject":8}],8:[function(require,module,exports){
+const Handle = require("./Handle");
+
+class DatabaseObject {
+    constructor(subclass = null) {
+        this.handle = Handle.next();
+        this.ownerObjectHandle = "0";
+        this.subclassMarkers = [];
+        if (subclass) {
+            if (Array.isArray(subclass)) {
+                this.subclassMarkers.push(...subclass);
+            } else {
+                this.subclassMarkers.push(subclass);
+            }
+        }
+    }
+
+    /**
+     *
+     * @param {TagsManager} manager
+     */
+    tags(manager) {
+        manager.push(5, this.handle);
+        manager.push(330, this.ownerObjectHandle);
+        for (const s of this.subclassMarkers) {
+            manager.push(100, s);
+        }
+    }
+}
+
+module.exports = DatabaseObject;
+
+},{"./Handle":14}],9:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Dictionary extends DatabaseObject {
+    constructor() {
+        super("AcDbDictionary");
+        this.children = {};
+    }
+
+    /**
+     *
+     * @param {*} name
+     * @param {DatabaseObject} dictionary
+     */
+    addChildDictionary(name, dictionary) {
+        dictionary.ownerObjectHandle = this.handle;
+        this.children[name] = dictionary;
+    }
+
+    tags(manager) {
+        manager.push(0, "DICTIONARY");
+        super.tags(manager);
+        /* Duplicate record cloning flag - keep existing */
+        manager.push(281, 1);
+
+        const entries = Object.entries(this.children);
+        for (const entry of entries) {
+            const [name, dic] = entry;
+            manager.push(3, name);
+            manager.push(350, dic.handle);
+        }
+
+        const children = Object.values(this.children);
+        for (const c of children) {
+            c.tags(manager);
+        }
+    }
+}
+
+module.exports = Dictionary;
+
+},{"./DatabaseObject":8}],10:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+const Table = require("./Table");
+
+class DimStyleTable extends Table {
+    constructor(name) {
+        super(name);
+        this.subclassMarkers.push("AcDbDimStyleTable");
+    }
+
+    tags(manager) {
+        manager.push(0, "TABLE");
+        manager.push(2, this.name);
+        DatabaseObject.prototype.tags.call(this, manager);
+        manager.push(70, this.elements.length);
+        /* DIMTOL */
+        manager.push(71, 1);
+
+        for (const e of this.elements) {
+            e.tags(manager);
+        }
+
+        manager.push(0, "ENDTAB");
+    }
+}
+
+module.exports = DimStyleTable;
+
+},{"./DatabaseObject":8,"./Table":23}],11:[function(require,module,exports){
+const LineType = require("./LineType");
+const Layer = require("./Layer");
+const Table = require("./Table");
+const DimStyleTable = require("./DimStyleTable");
+const TextStyle = require("./TextStyle");
+const Viewport = require("./Viewport");
+const AppId = require("./AppId");
+const Block = require("./Block");
+const BlockRecord = require("./BlockRecord");
+const Dictionary = require("./Dictionary");
+const Line = require("./Line");
+const Line3d = require("./Line3d");
+const Arc = require("./Arc");
+const Circle = require("./Circle");
+const Cylinder = require("./Cylinder");
+const Text = require("./Text");
+const Polyline = require("./Polyline");
+const Polyline3d = require("./Polyline3d");
+const Face = require("./Face");
+const Point = require("./Point");
+const Spline = require("./Spline");
+const Ellipse = require("./Ellipse");
+const TagsManager = require("./TagsManager");
+const Handle = require("./Handle");
+
+class Drawing {
+    constructor() {
+        this.layers = {};
+        this.activeLayer = null;
+        this.lineTypes = {};
+        this.headers = {};
+        this.tables = {};
+        this.blocks = {};
+
+        this.dictionary = new Dictionary();
+
+        this.setUnits("Unitless");
+
+        for (const ltype of Drawing.LINE_TYPES) {
+            this.addLineType(ltype.name, ltype.description, ltype.elements);
+        }
+
+        for (const l of Drawing.LAYERS) {
+            this.addLayer(l.name, l.colorNumber, l.lineTypeName);
+        }
+
+        this.setActiveLayer("0");
+
+        // Must call this function
+        this.generateAutocadExtras();
+    }
+
+    /**
+     * @param {string} name
+     * @param {string} description
+     * @param {array} elements - if elem > 0 it is a line, if elem < 0 it is gap, if elem == 0.0 it is a
+     */
+    addLineType(name, description, elements) {
+        this.lineTypes[name] = new LineType(name, description, elements);
+        return this;
+    }
+
+    addLayer(name, colorNumber, lineTypeName) {
+        this.layers[name] = new Layer(name, colorNumber, lineTypeName);
+        return this;
+    }
+
+    setActiveLayer(name) {
+        this.activeLayer = this.layers[name];
+        return this;
+    }
+
+    addTable(name) {
+        const table = new Table(name);
+        this.tables[name] = table;
+        return table;
+    }
+
+    /**
+     *
+     * @param {string} name The name of the block.
+     * @returns {Block}
+     */
+    addBlock(name) {
+        const block = new Block(name);
+        this.blocks[name] = block;
+        return block;
+    }
+
+    drawLine(x1, y1, x2, y2) {
+        this.activeLayer.addShape(new Line(x1, y1, x2, y2));
+        return this;
+    }
+
+    drawLine3d(x1, y1, z1, x2, y2, z2) {
+        this.activeLayer.addShape(new Line3d(x1, y1, z1, x2, y2, z2));
+        return this;
+    }
+
+    drawPoint(x, y) {
+        this.activeLayer.addShape(new Point(x, y));
+        return this;
+    }
+
+    drawRect(x1, y1, x2, y2, cornerLength, cornerBulge) {
+        const w = x2 - x1;
+        const h = y2 - y1;
+        cornerBulge = cornerBulge || 0;
+        let p = null;
+        if (!cornerLength) {
+            p = new Polyline(
+                [
+                    [x1, y1],
+                    [x1, y1 + h],
+                    [x1 + w, y1 + h],
+                    [x1 + w, y1],
+                ],
+                true
+            );
+        } else {
+            p = new Polyline(
+                [
+                    [x1 + w - cornerLength, y1, cornerBulge], // 1
+                    [x1 + w, y1 + cornerLength], // 2
+                    [x1 + w, y1 + h - cornerLength, cornerBulge], // 3
+                    [x1 + w - cornerLength, y1 + h], // 4
+                    [x1 + cornerLength, y1 + h, cornerBulge], // 5
+                    [x1, y1 + h - cornerLength], // 6
+                    [x1, y1 + cornerLength, cornerBulge], // 7
+                    [x1 + cornerLength, y1], // 8
+                ],
+                true
+            );
+        }
+        this.activeLayer.addShape(p);
+        return this;
+    }
+
+    /**
+     * Draw a regular convex polygon as a polyline entity.
+     *
+     * @see [Regular polygon | Wikipedia](https://en.wikipedia.org/wiki/Regular_polygon)
+     *
+     * @param {number} x - The X coordinate of the center of the polygon.
+     * @param {number} y - The Y coordinate of the center of the polygon.
+     * @param {number} numberOfSides - The number of sides.
+     * @param {number} radius - The radius.
+     * @param {number} rotation - The  rotation angle (in Degrees) of the polygon. By default 0.
+     * @param {boolean} circumscribed - If `true` is a polygon in which each side is a tangent to a circle.
+     * If `false` is a polygon in which all vertices lie on a circle. By default `false`.
+     *
+     * @returns {Drawing} - The current object of {@link Drawing}.
+     */
+    drawPolygon(
+        x,
+        y,
+        numberOfSides,
+        radius,
+        rotation = 0,
+        circumscribed = false
+    ) {
+        const angle = (2 * Math.PI) / numberOfSides;
+        const vertices = [];
+        let d = radius;
+        const rotationRad = (rotation * Math.PI) / 180;
+        if (circumscribed) d = radius / Math.cos(Math.PI / numberOfSides);
+        for (let i = 0; i < numberOfSides; i++) {
+            vertices.push([
+                x + d * Math.sin(rotationRad + i * angle),
+                y + d * Math.cos(rotationRad + i * angle),
+            ]);
+        }
+        this.activeLayer.addShape(new Polyline(vertices, true));
+        return this;
+    }
+
+    /**
+     * @param {number} x1 - Center x
+     * @param {number} y1 - Center y
+     * @param {number} r - radius
+     * @param {number} startAngle - degree
+     * @param {number} endAngle - degree
+     */
+    drawArc(x1, y1, r, startAngle, endAngle) {
+        this.activeLayer.addShape(new Arc(x1, y1, r, startAngle, endAngle));
+        return this;
+    }
+
+    /**
+     * @param {number} x1 - Center x
+     * @param {number} y1 - Center y
+     * @param {number} r - radius
+     */
+    drawCircle(x1, y1, r) {
+        this.activeLayer.addShape(new Circle(x1, y1, r));
+        return this;
+    }
+
+    /**
+     * @param {number} x1 - Center x
+     * @param {number} y1 - Center y
+     * @param {number} z1 - Center z
+     * @param {number} r - radius
+     * @param {number} thickness - thickness
+     * @param {number} extrusionDirectionX - Extrusion Direction x
+     * @param {number} extrusionDirectionY - Extrusion Direction y
+     * @param {number} extrusionDirectionZ - Extrusion Direction z
+     */
+    drawCylinder(
+        x1,
+        y1,
+        z1,
+        r,
+        thickness,
+        extrusionDirectionX,
+        extrusionDirectionY,
+        extrusionDirectionZ
+    ) {
+        this.activeLayer.addShape(
+            new Cylinder(
+                x1,
+                y1,
+                z1,
+                r,
+                thickness,
+                extrusionDirectionX,
+                extrusionDirectionY,
+                extrusionDirectionZ
+            )
+        );
+        return this;
+    }
+
+    /**
+     * @param {number} x1 - x
+     * @param {number} y1 - y
+     * @param {number} height - Text height
+     * @param {number} rotation - Text rotation
+     * @param {string} value - the string itself
+     * @param {string} [horizontalAlignment="left"] left | center | right
+     * @param {string} [verticalAlignment="baseline"] baseline | bottom | middle | top
+     */
+    drawText(
+        x1,
+        y1,
+        height,
+        rotation,
+        value,
+        horizontalAlignment = "left",
+        verticalAlignment = "baseline"
+    ) {
+        this.activeLayer.addShape(
+            new Text(
+                x1,
+                y1,
+                height,
+                rotation,
+                value,
+                horizontalAlignment,
+                verticalAlignment
+            )
+        );
+        return this;
+    }
+
+    /**
+     * @param {[number, number][]} points - Array of points like [ [x1, y1], [x2, y2]... ]
+     * @param {boolean} closed - Closed polyline flag
+     * @param {number} startWidth - Default start width
+     * @param {number} endWidth - Default end width
+     */
+    drawPolyline(points, closed = false, startWidth = 0, endWidth = 0) {
+        this.activeLayer.addShape(
+            new Polyline(points, closed, startWidth, endWidth)
+        );
+        return this;
+    }
+
+    /**
+     * @param {[number, number, number][]} points - Array of points like [ [x1, y1, z1], [x2, y2, z1]... ]
+     */
+    drawPolyline3d(points) {
+        points.forEach((point) => {
+            if (point.length !== 3) {
+                throw "Require 3D coordinates";
+            }
+        });
+        this.activeLayer.addShape(new Polyline3d(points));
+        return this;
+    }
+
+    /**
+     *
+     * @param {number} trueColor - Integer representing the true color, can be passed as an hexadecimal value of the form 0xRRGGBB
+     */
+    setTrueColor(trueColor) {
+        this.activeLayer.setTrueColor(trueColor);
+        return this;
+    }
+
+    /**
+     * Draw a spline.
+     * @param {[Array]} controlPoints - Array of control points like [ [x1, y1], [x2, y2]... ]
+     * @param {number} degree - Degree of spline: 2 for quadratic, 3 for cubic. Default is 3
+     * @param {[number]} knots - Knot vector array. If null, will use a uniform knot vector. Default is null
+     * @param {[number]} weights - Control point weights. If provided, must be one weight for each control point. Default is null
+     * @param {[Array]} fitPoints - Array of fit points like [ [x1, y1], [x2, y2]... ]
+     */
+    drawSpline(
+        controlPoints,
+        degree = 3,
+        knots = null,
+        weights = null,
+        fitPoints = []
+    ) {
+        this.activeLayer.addShape(
+            new Spline(controlPoints, degree, knots, weights, fitPoints)
+        );
+        return this;
+    }
+
+    /**
+     * Draw an ellipse.
+     * @param {number} x1 - Center x
+     * @param {number} y1 - Center y
+     * @param {number} majorAxisX - Endpoint x of major axis, relative to center
+     * @param {number} majorAxisY - Endpoint y of major axis, relative to center
+     * @param {number} axisRatio - Ratio of minor axis to major axis
+     * @param {number} startAngle - Start angle
+     * @param {number} endAngle - End angle
+     */
+    drawEllipse(
+        x1,
+        y1,
+        majorAxisX,
+        majorAxisY,
+        axisRatio,
+        startAngle = 0,
+        endAngle = 2 * Math.PI
+    ) {
+        this.activeLayer.addShape(
+            new Ellipse(
+                x1,
+                y1,
+                majorAxisX,
+                majorAxisY,
+                axisRatio,
+                startAngle,
+                endAngle
+            )
+        );
+        return this;
+    }
+
+    /**
+     * @param {number} x1 - x
+     * @param {number} y1 - y
+     * @param {number} z1 - z
+     * @param {number} x2 - x
+     * @param {number} y2 - y
+     * @param {number} z2 - z
+     * @param {number} x3 - x
+     * @param {number} y3 - y
+     * @param {number} z3 - z
+     * @param {number} x4 - x
+     * @param {number} y4 - y
+     * @param {number} z4 - z
+     */
+    drawFace(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
+        this.activeLayer.addShape(
+            new Face(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)
+        );
+        return this;
+    }
+
+    _ltypeTable() {
+        const t = new Table("LTYPE");
+        const ltypes = Object.values(this.lineTypes);
+        for (const lt of ltypes) t.add(lt);
+        return t;
+    }
+
+    _layerTable(manager) {
+        const t = new Table("LAYER");
+        const layers = Object.values(this.layers);
+        for (const l of layers) t.add(l);
+        return t;
+    }
+
+    /**
+     * @see https://www.autodesk.com/techpubs/autocad/acadr14/dxf/header_section_al_u05_c.htm
+     * @see https://www.autodesk.com/techpubs/autocad/acad2000/dxf/header_section_group_codes_dxf_02.htm
+     *
+     * @param {string} variable
+     * @param {array} values Array of "two elements arrays". [  [value1_GroupCode, value1_value], [value2_GroupCode, value2_value]  ]
+     */
+    header(variable, values) {
+        this.headers[variable] = values;
+        return this;
+    }
+
+    /**
+     *
+     * @param {string} unit see Drawing.UNITS
+     */
+    setUnits(unit) {
+        let value =
+            typeof Drawing.UNITS[unit] != "undefined"
+                ? Drawing.UNITS[unit]
+                : Drawing.UNITS["Unitless"];
+        this.header("INSUNITS", [[70, Drawing.UNITS[unit]]]);
+        return this;
+    }
+
+    /** Generate additional DXF metadata which are required to successfully open resulted document
+     * in AutoDesk products. Call this method before serializing the drawing to get the most
+     * compatible result.
+     */
+    generateAutocadExtras() {
+        if (!this.headers["ACADVER"]) {
+            /* AutoCAD 2007 version. */
+            this.header("ACADVER", [[1, "AC1021"]]);
+        }
+
+        if (!this.lineTypes["ByBlock"]) {
+            this.addLineType("ByBlock", "", []);
+        }
+        if (!this.lineTypes["ByLayer"]) {
+            this.addLineType("ByLayer", "", []);
+        }
+
+        let vpTable = this.tables["VPORT"];
+        if (!vpTable) {
+            vpTable = this.addTable("VPORT");
+        }
+        let styleTable = this.tables["STYLE"];
+        if (!styleTable) {
+            styleTable = this.addTable("STYLE");
+        }
+        if (!this.tables["VIEW"]) {
+            this.addTable("VIEW");
+        }
+        if (!this.tables["UCS"]) {
+            this.addTable("UCS");
+        }
+        let appIdTable = this.tables["APPID"];
+        if (!appIdTable) {
+            appIdTable = this.addTable("APPID");
+        }
+        if (!this.tables["DIMSTYLE"]) {
+            const t = new DimStyleTable("DIMSTYLE");
+            this.tables["DIMSTYLE"] = t;
+        }
+
+        vpTable.add(new Viewport("*ACTIVE", 1000));
+
+        /* Non-default text alignment is not applied without this entry. */
+        styleTable.add(new TextStyle("standard"));
+
+        appIdTable.add(new AppId("ACAD"));
+
+        this.modelSpace = this.addBlock("*Model_Space");
+        this.addBlock("*Paper_Space");
+
+        const d = new Dictionary();
+        this.dictionary.addChildDictionary("ACAD_GROUP", d);
+    }
+
+    _tagsManager() {
+        const manager = new TagsManager();
+
+        // Setup
+        const blockRecordTable = new Table("BLOCK_RECORD");
+        const blocks = Object.values(this.blocks);
+        for (const b of blocks) {
+            const r = new BlockRecord(b.name);
+            blockRecordTable.add(r);
+        }
+        const ltypeTable = this._ltypeTable();
+        const layerTable = this._layerTable();
+
+        // Header section start.
+        manager.start("HEADER");
+        manager.addHeaderVariable("HANDSEED", [[5, Handle.peek()]]);
+        const variables = Object.entries(this.headers);
+        for (const v of variables) {
+            const [name, values] = v;
+            manager.addHeaderVariable(name, values);
+        }
+        manager.end();
+        // Header section end.
+
+        // Classes section start.
+        manager.start("CLASSES");
+        // Empty CLASSES section for compatibility
+        manager.end();
+        // Classes section end.
+
+        // Tables section start.
+        manager.start("TABLES");
+        ltypeTable.tags(manager);
+        layerTable.tags(manager);
+        const tables = Object.values(this.tables);
+        for (const t of tables) {
+            t.tags(manager);
+        }
+        blockRecordTable.tags(manager);
+        manager.end();
+        // Tables section end.
+
+        // Blocks section start.
+        manager.start("BLOCKS");
+        for (const b of blocks) {
+            b.tags(manager);
+        }
+        manager.end();
+        // Blocks section end.
+
+        // Entities section start.
+        manager.start("ENTITIES");
+        const layers = Object.values(this.layers);
+        for (const l of layers) {
+            l.shapesTags(this.modelSpace, manager);
+        }
+        manager.end();
+        // Entities section end.
+
+        // Objects section start.
+        manager.start("OBJECTS");
+        this.dictionary.tags(manager);
+        manager.end();
+        // Objects section end.
+
+        manager.push(0, "EOF");
+
+        return manager;
+    }
+
+    toDxfString() {
+        return this._tagsManager().toDxfString();
+    }
+}
+
+//AutoCAD Color Index (ACI)
+//http://sub-atomic.com/~moses/acadcolors.html
+Drawing.ACI = {
+    LAYER: 0,
+    RED: 1,
+    YELLOW: 2,
+    GREEN: 3,
+    CYAN: 4,
+    BLUE: 5,
+    MAGENTA: 6,
+    WHITE: 7,
+};
+
+Drawing.LINE_TYPES = [
+    { name: "CONTINUOUS", description: "______", elements: [] },
+    { name: "DASHED", description: "_ _ _ ", elements: [5.0, -5.0] },
+    { name: "DOTTED", description: ". . . ", elements: [0.0, -5.0] },
+];
+
+Drawing.LAYERS = [
+    { name: "0", colorNumber: Drawing.ACI.WHITE, lineTypeName: "CONTINUOUS" },
+];
+
+//https://www.autodesk.com/techpubs/autocad/acad2000/dxf/header_section_group_codes_dxf_02.htm
+Drawing.UNITS = {
+    Unitless: 0,
+    Inches: 1,
+    Feet: 2,
+    Miles: 3,
+    Millimeters: 4,
+    Centimeters: 5,
+    Meters: 6,
+    Kilometers: 7,
+    Microinches: 8,
+    Mils: 9,
+    Yards: 10,
+    Angstroms: 11,
+    Nanometers: 12,
+    Microns: 13,
+    Decimeters: 14,
+    Decameters: 15,
+    Hectometers: 16,
+    Gigameters: 17,
+    "Astronomical units": 18,
+    "Light years": 19,
+    Parsecs: 20,
+};
+
+module.exports = Drawing;
+
+},{"./AppId":2,"./Arc":3,"./Block":4,"./BlockRecord":5,"./Circle":6,"./Cylinder":7,"./Dictionary":9,"./DimStyleTable":10,"./Ellipse":12,"./Face":13,"./Handle":14,"./Layer":15,"./Line":16,"./Line3d":17,"./LineType":18,"./Point":19,"./Polyline":20,"./Polyline3d":21,"./Spline":22,"./Table":23,"./TagsManager":24,"./Text":25,"./TextStyle":26,"./Viewport":28}],12:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Ellipse extends DatabaseObject {
+    /**
+     * Creates an ellipse.
+     * @param {number} x - Center x
+     * @param {number} y - Center y
+     * @param {number} majorAxisX - Endpoint x of major axis, relative to center
+     * @param {number} majorAxisY - Endpoint y of major axis, relative to center
+     * @param {number} axisRatio - Ratio of minor axis to major axis
+     * @param {number} startAngle - Start angle
+     * @param {number} endAngle - End angle
+     */
+    constructor(x, y, majorAxisX, majorAxisY, axisRatio, startAngle, endAngle) {
+        super(["AcDbEntity", "AcDbEllipse"]);
+        this.x = x;
+        this.y = y;
+        this.majorAxisX = majorAxisX;
+        this.majorAxisY = majorAxisY;
+        this.axisRatio = axisRatio;
+        this.startAngle = startAngle;
+        this.endAngle = endAngle;
+    }
+
+    tags(manager) {
+        // https://www.autodesk.com/techpubs/autocad/acadr14/dxf/ellipse_al_u05_c.htm
+        manager.push(0, "ELLIPSE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.point(this.x, this.y);
+        manager.push(11, this.majorAxisX);
+        manager.push(21, this.majorAxisY);
+        manager.push(31, 0);
+
+        manager.push(40, this.axisRatio);
+        manager.push(41, this.startAngle);
+        manager.push(42, this.endAngle);
+    }
+}
+
+module.exports = Ellipse;
+
+},{"./DatabaseObject":8}],13:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Face extends DatabaseObject {
+    constructor(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4) {
+        super(["AcDbEntity", "AcDbFace"]);
+        this.x1 = x1;
+        this.y1 = y1;
+        this.z1 = z1;
+        this.x2 = x2;
+        this.y2 = y2;
+        this.z2 = z2;
+        this.x3 = x3;
+        this.y3 = y3;
+        this.z3 = z3;
+        this.x4 = x4;
+        this.y4 = y4;
+        this.z4 = z4;
+    }
+
+    tags(manager) {
+        //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/3dface_al_u05_c.htm
+        manager.push(0, "3DFACE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.point(this.x1, this.y1, this.z1);
+
+        manager.push(11, this.x2);
+        manager.push(21, this.y2);
+        manager.push(31, this.z2);
+
+        manager.push(12, this.x3);
+        manager.push(22, this.y3);
+        manager.push(32, this.z3);
+
+        manager.push(13, this.x4);
+        manager.push(23, this.y4);
+        manager.push(33, this.z4);
+    }
+}
+
+module.exports = Face;
+
+},{"./DatabaseObject":8}],14:[function(require,module,exports){
+class Handle {
+    static seed = 0;
+
+    static next() {
+        return (++Handle.seed).toString(16).toUpperCase();
+    }
+
+    static peek() {
+        return (Handle.seed + 1).toString(16).toUpperCase();
+    }
+}
+
+module.exports = Handle;
+
+},{}],15:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Layer extends DatabaseObject {
+    constructor(name, colorNumber, lineTypeName = null) {
+        super(["AcDbSymbolTableRecord", "AcDbLayerTableRecord"]);
+        this.name = name;
+        this.colorNumber = colorNumber;
+        this.lineTypeName = lineTypeName;
+        this.shapes = [];
+        this.trueColor = -1;
+    }
+
+    tags(manager) {
+        manager.push(0, "LAYER");
+        super.tags(manager);
+        manager.push(2, this.name);
+        if (this.trueColor !== -1) manager.push(420, this.trueColor);
+        else manager.push(62, this.colorNumber);
+
+        manager.push(70, 0);
+        if (this.lineTypeName) manager.push(6, this.lineTypeName);
+
+        /* Hard-pointer handle to PlotStyleName object; seems mandatory, but any value seems OK,
+         * including 0.
+         */
+        manager.push(390, 1);
+    }
+
+    setTrueColor(color) {
+        this.trueColor = color;
+    }
+
+    addShape(shape) {
+        this.shapes.push(shape);
+        shape.layer = this;
+    }
+
+    getShapes() {
+        return this.shapes;
+    }
+
+    shapesTags(space, manager) {
+        for (const shape of this.shapes) {
+            shape.ownerObjectHandle = space.handle;
+            shape.tags(manager);
+        }
+    }
+}
+
+module.exports = Layer;
+
+},{"./DatabaseObject":8}],16:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Line extends DatabaseObject {
+    constructor(x1, y1, x2, y2) {
+        super(["AcDbEntity", "AcDbLine"]);
+        this.x1 = x1;
+        this.y1 = y1;
+        this.x2 = x2;
+        this.y2 = y2;
+    }
+
+    tags(manager) {
+        //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/line_al_u05_c.htm
+        manager.push(0, "LINE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.point(this.x1, this.y1);
+
+        manager.push(11, this.x2);
+        manager.push(21, this.y2);
+        manager.push(31, 0);
+    }
+}
+
+module.exports = Line;
+
+},{"./DatabaseObject":8}],17:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Line3d extends DatabaseObject {
+    constructor(x1, y1, z1, x2, y2, z2) {
+        super(["AcDbEntity", "AcDbLine"]);
+        this.x1 = x1;
+        this.y1 = y1;
+        this.z1 = z1;
+        this.x2 = x2;
+        this.y2 = y2;
+        this.z2 = z2;
+    }
+
+    tags(manager) {
+        //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/line_al_u05_c.htm
+        manager.push(0, "LINE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.point(this.x1, this.y1, this.z1);
+
+        manager.push(11, this.x2);
+        manager.push(21, this.y2);
+        manager.push(31, this.z2);
+    }
+}
+
+module.exports = Line3d;
+
+},{"./DatabaseObject":8}],18:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class LineType extends DatabaseObject {
+    /**
+     * @param {string} name
+     * @param {string} description
+     * @param {array} elements - if elem > 0 it is a line, if elem < 0 it is gap, if elem == 0.0 it is a
+     */
+    constructor(name, description, elements) {
+        super(["AcDbSymbolTableRecord", "AcDbLinetypeTableRecord"]);
+        this.name = name;
+        this.description = description;
+        this.elements = elements;
+    }
+
+    tags(manager) {
+        // https://www.autodesk.com/techpubs/autocad/acadr14/dxf/ltype_al_u05_c.htm
+        manager.push(0, "LTYPE");
+        super.tags(manager);
+        manager.push(2, this.name);
+        manager.push(3, this.description);
+        manager.push(70, 0);
+        manager.push(72, 65);
+        manager.push(73, this.elements.length);
+        manager.push(40, this.getElementsSum());
+
+        this.elements.forEach((element) => {
+            manager.push(49, element);
+            manager.push(74, 0);
+        });
+    }
+
+    getElementsSum() {
+        return this.elements.reduce((sum, element) => {
+            return sum + Math.abs(element);
+        }, 0);
+    }
+}
+
+module.exports = LineType;
+
+},{"./DatabaseObject":8}],19:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Point extends DatabaseObject {
+    constructor(x, y) {
+        super(["AcDbEntity", "AcDbPoint"]);
+        this.x = x;
+        this.y = y;
+    }
+
+    tags(manager) {
+        //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/point_al_u05_c.htm
+        manager.push(0, "POINT");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.point(this.x, this.y);
+    }
+}
+
+module.exports = Point;
+
+},{"./DatabaseObject":8}],20:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Polyline extends DatabaseObject {
+    /**
+     * @param {array} points - Array of points like [ [x1, y1], [x2, y2, bulge]... ]
+     * @param {boolean} closed
+     * @param {number} startWidth
+     * @param {number} endWidth
+     */
+    constructor(points, closed = false, startWidth = 0, endWidth = 0) {
+        super(["AcDbEntity", "AcDbPolyline"]);
+        this.points = points;
+        this.closed = closed;
+        this.startWidth = startWidth;
+        this.endWidth = endWidth;
+    }
+
+    tags(manager) {
+        manager.push(0, "LWPOLYLINE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.push(6, "ByLayer");
+        manager.push(62, 256);
+        manager.push(370, -1);
+        manager.push(90, this.points.length);
+        manager.push(70, this.closed ? 1 : 0);
+
+        this.points.forEach((point) => {
+            const [x, y, z] = point;
+            manager.push(10, x);
+            manager.push(20, y);
+            if (this.startWidth !== 0 || this.endWidth !== 0) {
+                manager.push(40, this.startWidth);
+                manager.push(41, this.endWidth);
+            }
+            if (z !== undefined) manager.push(42, z);
+        });
+    }
+}
+
+module.exports = Polyline;
+
+},{"./DatabaseObject":8}],21:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+const Handle = require("./Handle");
+const Vertex = require("./Vertex");
+
+class Polyline3d extends DatabaseObject {
+    /**
+     * @param {[number, number, number][]} points - Array of points like [ [x1, y1, z1], [x2, y2, z2]... ]
+     */
+    constructor(points) {
+        super(["AcDbEntity", "AcDb3dPolyline"]);
+        this.verticies = points.map((point) => {
+            const [x, y, z] = point;
+            const vertex = new Vertex(x, y, z);
+            vertex.ownerObjectHandle = this.handle;
+            return vertex;
+        });
+        this.seqendHandle = Handle.next();
+    }
+
+    tags(manager) {
+        manager.push(0, "POLYLINE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.push(66, 1);
+        manager.push(70, 0);
+        manager.point(0, 0);
+
+        this.verticies.forEach((vertex) => {
+            vertex.layer = this.layer;
+            vertex.tags(manager);
+        });
+
+        manager.push(0, "SEQEND");
+        manager.push(5, this.seqendHandle);
+        manager.push(100, "AcDbEntity");
+        manager.push(8, this.layer.name);
+    }
+}
+
+module.exports = Polyline3d;
+
+},{"./DatabaseObject":8,"./Handle":14,"./Vertex":27}],22:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Spline extends DatabaseObject {
+    /**
+     * Creates a spline. See https://www.autodesk.com/techpubs/autocad/acad2000/dxf/spline_dxf_06.htm
+     * @param {[Array]} controlPoints - Array of control points like [ [x1, y1], [x2, y2]... ]
+     * @param {number} degree - Degree of spline: 2 for quadratic, 3 for cubic. Default is 3
+     * @param {[number]} knots - Knot vector array. If null, will use a uniform knot vector. Default is null
+     * @param {[number]} weights - Control point weights. If provided, must be one weight for each control point. Default is null
+     * @param {[Array]} fitPoints - Array of fit points like [ [x1, y1], [x2, y2]... ]
+     */
+    constructor(
+        controlPoints,
+        degree = 3,
+        knots = null,
+        weights = null,
+        fitPoints = []
+    ) {
+        super(["AcDbEntity", "AcDbSpline"]);
+        if (controlPoints.length < degree + 1) {
+            throw new Error(
+                `For degree ${degree} spline, expected at least ${
+                    degree + 1
+                } control points, but received only ${controlPoints.length}`
+            );
+        }
+
+        if (knots == null) {
+            // Examples:
+            // degree 2, 3 pts:  0 0 0 1 1 1
+            // degree 2, 4 pts:  0 0 0 1 2 2 2
+            // degree 2, 5 pts:  0 0 0 1 2 3 3 3
+            // degree 3, 4 pts:  0 0 0 0 1 1 1 1
+            // degree 3, 5 pts:  0 0 0 0 1 2 2 2 2
+
+            knots = [];
+            for (let i = 0; i < degree + 1; i++) {
+                knots.push(0);
+            }
+            for (let i = 1; i < controlPoints.length - degree; i++) {
+                knots.push(i);
+            }
+            for (let i = 0; i < degree + 1; i++) {
+                knots.push(controlPoints.length - degree);
+            }
+        }
+
+        if (knots.length !== controlPoints.length + degree + 1) {
+            throw new Error(
+                `Invalid knot vector length. Expected ${
+                    controlPoints.length + degree + 1
+                } but received ${knots.length}.`
+            );
+        }
+
+        this.controlPoints = controlPoints;
+        this.knots = knots;
+        this.fitPoints = fitPoints;
+        this.degree = degree;
+        this.weights = weights;
+
+        const closed = 0;
+        const periodic = 0;
+        const rational = this.weights ? 1 : 0;
+        const planar = 1;
+        const linear = 0;
+
+        this.type =
+            closed * 1 + periodic * 2 + rational * 4 + planar * 8 + linear * 16;
+
+        // Not certain where the values of these flags came from so I'm going to leave them commented for now
+        // const closed = 0
+        // const periodic = 0
+        // const rational = 1
+        // const planar = 1
+        // const linear = 0
+        // const splineType = 1024 * closed + 128 * periodic + 8 * rational + 4 * planar + 2 * linear
+    }
+
+    tags(manager) {
+        // https://www.autodesk.com/techpubs/autocad/acad2000/dxf/spline_dxf_06.htm
+        manager.push(0, "SPLINE");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+
+        manager.push(210, 0.0);
+        manager.push(220, 0.0);
+        manager.push(230, 1.0);
+
+        manager.push(70, this.type);
+        manager.push(71, this.degree);
+        manager.push(72, this.knots.length);
+        manager.push(73, this.controlPoints.length);
+        manager.push(74, this.fitPoints.length);
+
+        manager.push(42, 1e-7);
+        manager.push(43, 1e-7);
+        manager.push(44, 1e-10);
+
+        this.knots.forEach((knot) => {
+            manager.push(40, knot);
+        });
+
+        if (this.weights) {
+            this.weights.forEach((weight) => {
+                manager.push(41, weight);
+            });
+        }
+
+        this.controlPoints.forEach((point) => {
+            manager.point(point[0], point[1]);
+        });
+    }
+}
+
+module.exports = Spline;
+
+},{"./DatabaseObject":8}],23:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Table extends DatabaseObject {
+    constructor(name) {
+        super("AcDbSymbolTable");
+        this.name = name;
+        this.elements = [];
+    }
+
+    add(element) {
+        element.ownerObjectHandle = this.handle;
+        this.elements.push(element);
+    }
+
+    tags(manager) {
+        manager.push(0, "TABLE");
+        manager.push(2, this.name);
+        super.tags(manager);
+        manager.push(70, this.elements.length);
+
+        this.elements.forEach((element) => {
+            element.tags(manager);
+        });
+
+        manager.push(0, "ENDTAB");
+    }
+}
+
+module.exports = Table;
+
+},{"./DatabaseObject":8}],24:[function(require,module,exports){
+class TagsManager {
+    constructor() {
+        this.lines = [];
+    }
+
+    /**
+     *
+     * @param {number} x
+     * @param {number} y
+     * @param {number} z
+     */
+    point(x, y, z = 0) {
+        this.push(10, x);
+        this.push(20, y);
+        this.push(30, z);
+    }
+
+    /**
+     *
+     * @param {string} name The name of the section
+     */
+    start(name) {
+        this.push(0, "SECTION");
+        this.push(2, name);
+    }
+
+    end() {
+        this.push(0, "ENDSEC");
+    }
+
+    addHeaderVariable(name, tagsElements) {
+        this.push(9, `$${name}`);
+        tagsElements.forEach((tagElement) => {
+            this.push(tagElement[0], tagElement[1]);
+        });
+    }
+
+    push(code, value) {
+        this.lines.push(code, value);
+    }
+
+    toDxfString() {
+        return this.lines.join("\n");
+    }
+}
+
+module.exports = TagsManager;
+
+},{}],25:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+const H_ALIGN_CODES = ["left", "center", "right"];
+const V_ALIGN_CODES = ["baseline", "bottom", "middle", "top"];
+
+class Text extends DatabaseObject {
+    /**
+     * @param {number} x - x
+     * @param {number} y - y
+     * @param {number} height - Text height
+     * @param {number} rotation - Text rotation
+     * @param {string} value - the string itself
+     * @param {string} [horizontalAlignment="left"] left | center | right
+     * @param {string} [verticalAlignment="baseline"] baseline | bottom | middle | top
+     */
+    constructor(
+        x,
+        y,
+        height,
+        rotation,
+        value,
+        horizontalAlignment = "left",
+        verticalAlignment = "baseline"
+    ) {
+        super(["AcDbEntity", "AcDbText"]);
+        this.x = x;
+        this.y = y;
+        this.height = height;
+        this.rotation = rotation;
+        this.value = value;
+        this.hAlign = horizontalAlignment;
+        this.vAlign = verticalAlignment;
+    }
+
+    tags(manager) {
+        //https://www.autodesk.com/techpubs/autocad/acadr14/dxf/text_al_u05_c.htm
+        manager.push(0, "TEXT");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.point(this.x, this.y);
+        manager.push(40, this.height);
+        manager.push(1, this.value);
+        manager.push(50, this.rotation);
+
+        if (
+            H_ALIGN_CODES.includes(this.hAlign, 1) ||
+            V_ALIGN_CODES.includes(this.vAlign, 1)
+        ) {
+            manager.push(72, Math.max(H_ALIGN_CODES.indexOf(this.hAlign), 0));
+
+            manager.push(11, this.x);
+            manager.push(21, this.y);
+            manager.push(31, 0);
+
+            /* AutoCAD needs this one more time, yes, exactly here. */
+            manager.push(100, "AcDbText");
+            manager.push(73, Math.max(V_ALIGN_CODES.indexOf(this.vAlign), 0));
+        } else {
+            /* AutoCAD needs this one more time. */
+            manager.push(100, "AcDbText");
+        }
+    }
+}
+
+module.exports = Text;
+
+},{"./DatabaseObject":8}],26:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class TextStyle extends DatabaseObject {
+    fontFileName = 'txt';
+    constructor(name) {
+        super(["AcDbSymbolTableRecord", "AcDbTextStyleTableRecord"]);
+        this.name = name;
+    }
+
+    tags(manager) {
+        manager.push(0, "STYLE");
+        super.tags(manager);
+        manager.push(2, this.name);
+        /* No flags set */
+        manager.push(70, 0);
+        manager.push(40, 0);
+        manager.push(41, 1);
+        manager.push(50, 0);
+        manager.push(71, 0);
+        manager.push(42, 1);
+        manager.push(3, this.fontFileName);
+        manager.push(4, "");
+    }
+}
+
+module.exports = TextStyle;
+
+},{"./DatabaseObject":8}],27:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Vertex extends DatabaseObject {
+    /**
+     *
+     * @param {number} x The X coordinate
+     * @param {number} y The Y coordinate
+     * @param {number} z The Z coordinate
+     */
+    constructor(x, y, z) {
+        super(["AcDbEntity", "AcDbVertex", "AcDb3dPolylineVertex"]);
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
+
+    tags(manager) {
+        manager.push(0, "VERTEX");
+        super.tags(manager);
+        manager.push(8, this.layer.name);
+        manager.point(this.x, this.y, this.z);
+        manager.push(70, 32);
+    }
+}
+
+module.exports = Vertex;
+
+},{"./DatabaseObject":8}],28:[function(require,module,exports){
+const DatabaseObject = require("./DatabaseObject");
+
+class Viewport extends DatabaseObject {
+    constructor(name, height) {
+        super(["AcDbSymbolTableRecord", "AcDbViewportTableRecord"]);
+        this.name = name;
+        this.height = height;
+    }
+
+    tags(manager) {
+        manager.push(0, "VPORT");
+        super.tags(manager);
+        manager.push(2, this.name);
+        manager.push(40, this.height);
+        /* No flags set */
+        manager.push(70, 0);
+    }
+}
+
+module.exports = Viewport;
+
+},{"./DatabaseObject":8}]},{},[1])(1)
+});
+</script>
+<script>
+/* ====================== DATA MODEL ====================== */
+
+const STD_BREAKERS = [6,10,16,20,25,32,40,50,63,80,100,125,160,200,225,250,315,400,500,630];
+const STD_FUSES    = [4,6,10,15,16,20,25,30,32,40,50,63];
+// mm2 -> ampacity (A), simplified PVC/XLPE copper reference table (Method C / free air, ~30C ambient)
+const CABLE_TABLE = [
+  {mm2:1.5, a:17.5},{mm2:2.5, a:24},{mm2:4, a:32},{mm2:6, a:41},{mm2:10, a:57},
+  {mm2:16, a:76},{mm2:25, a:101},{mm2:35, a:125},{mm2:50, a:151},{mm2:70, a:192},
+  {mm2:95, a:232},{mm2:120, a:269},{mm2:150, a:300},{mm2:185, a:341},{mm2:240, a:400}
+];
+
+function pickStdBreaker(current){
+  for(const b of STD_BREAKERS){ if(b >= current) return b; }
+  return STD_BREAKERS[STD_BREAKERS.length-1];
+}
+function pickStdFuse(current){
+  for(const f of STD_FUSES){ if(f >= current) return f; }
+  return STD_FUSES[STD_FUSES.length-1];
+}
+function pickCable(current){
+  for(const c of CABLE_TABLE){ if(c.a >= current) return c; }
+  return CABLE_TABLE[CABLE_TABLE.length-1];
+}
+// Enforces a minimum cable cross-section (mm2) on top of the ampacity-based pick above — used for the
+// "≤10kW system → 6mm² AC/DC floor" field-practice rule (see computeProtection). Only ever upgrades the
+// cable (never downgrades one that ampacity already required to be larger).
+function enforceMinCableSize(cableObj, minMm2){
+  if(cableObj && cableObj.mm2 < minMm2){
+    const upgraded = CABLE_TABLE.find(c => c.mm2 === minMm2);
+    if(upgraded) return upgraded;
+  }
+  return cableObj;
+}
+function parseFirstNumber(str){
+  if(str===undefined||str===null) return NaN;
+  if(typeof str === 'number') return str;
+  const m = String(str).replace(/,/g,'').match(/-?\d+(\.\d+)?/);
+  return m ? parseFloat(m[0]) : NaN;
+}
+function fmt(n, unit){
+  if(isNaN(n)) return '—';
+  return (Number.isInteger(n)? n : n.toFixed(2)) + (unit? ' '+unit : '');
+}
+function uid(){ return 'c'+Math.random().toString(36).slice(2,9); }
+
+/* Field schema shared by detail view + add-form (key, label, group, isText) */
+const PKG_FIELDS = [
+  {k:'system', label:'System', grp:'ทั่วไป'},
+  {k:'phase', label:'Phase', grp:'ทั่วไป'},
+  {k:'invBrand', label:'Inverter Brand', grp:'Inverter'},
+  {k:'invModel', label:'Inverter Model', grp:'Inverter'},
+  {k:'invKw', label:'Inverter (kW)', grp:'Inverter'},
+  {k:'ratedACCurrent', label:'Rated AC Current (A)', grp:'Inverter'},
+  {k:'maxACCurrent', label:'Max AC Output Current (A)', grp:'Inverter'},
+  {k:'acVoltage', label:'AC Output Voltage (V)', grp:'Inverter'},
+  {k:'maxDCVoltage', label:'Max DC Input Voltage (V)', grp:'Inverter'},
+  {k:'dcInputCurrentRated', label:'DC Input Current Rated', grp:'Inverter'},
+  {k:'maxPVInputCurrent', label:'Max PV Input Current', grp:'Inverter'},
+  {k:'maxPVSCCurrent', label:'Max PV Short Circuit Current', grp:'Inverter'},
+  {k:'battBrand', label:'Battery Brand', grp:'Battery'},
+  {k:'battModel', label:'Battery Model', grp:'Battery'},
+  {k:'battKwh', label:'Battery (kWh)', grp:'Battery'},
+  {k:'battVoltage', label:'Battery Voltage (V)', grp:'Battery'},
+  {k:'battCapacityAh', label:'Battery Capacity (Ah)', grp:'Battery'},
+  {k:'maxChargeCurrent', label:'Max Charge Current (A)', grp:'Battery'},
+  {k:'maxDischargeCurrent', label:'Max Discharge Current (A)', grp:'Battery'},
+  {k:'peakCurrent', label:'Peak Current (A)', grp:'Battery'},
+  {k:'panelBrand', label:'Solar Panel Brand', grp:'Solar Panel'},
+  {k:'panelModel', label:'Solar Panel Model', grp:'Solar Panel'},
+  {k:'panelWp', label:'Solar Panel (Wp)', grp:'Solar Panel'},
+  {k:'panelQty', label:'Solar Panel Qty', grp:'Solar Panel'},
+  {k:'panelTotalWp', label:'Solar Panel Total (Wp)', grp:'Solar Panel'},
+  {k:'voc', label:'Voc', grp:'Solar Panel'},
+  {k:'isc', label:'Isc', grp:'Solar Panel'},
+  {k:'vmp', label:'Vmp', grp:'Solar Panel'},
+  {k:'imp', label:'Imp', grp:'Solar Panel'},
+  {k:'maxSystemVoltage', label:'Max System Voltage', grp:'Solar Panel'},
+  {k:'maxSeriesFuse', label:'Max Series Fuse', grp:'Protection'},
+  {k:'suggestedDCFuse', label:'Suggested DC Fuse', grp:'Protection'},
+  {k:'suggestedDCMCB', label:'Suggested DC MCB', grp:'Protection'},
+];
+
+/* ไม่มีแพ็คเก็จมาตรฐานฝังไว้ในระบบแล้ว — ผู้ใช้นำเข้าแพ็คเก็จเองผ่าน Excel import (แผงด้านซ้าย)
+   หรือกดปุ่ม "+ เพิ่มแพ็คเก็จใหม่" ในหน้าเลือกแพ็คเก็จ โครงสร้างข้อมูล (PKG_FIELDS) ยังคงเดิมทุกฟิลด์ */
+const DEFAULT_PACKAGES = [];
+
+/* ====================== APP STATE ====================== */
+const STEP_DEFS = [
+  {id:1, label:'ประเภทระบบ', sub:'System Type'},
+  {id:2, label:'Main Origin Protection', sub:'Grid-side data'},
+  {id:3, label:'เลือกแพ็คเก็จอุปกรณ์', sub:'Brand & Package'},
+  {id:4, label:'บันทึกข้อมูล / สรุป', sub:'Summary'},
+  {id:5, label:'คำนวณ MCB', sub:'Protection sizing'},
+  {id:6, label:'Single Line Diagram', sub:'SLD'},
+  {id:7, label:'รายงาน / PDF', sub:'Report'},
+];
+
+let state = {
+  step: 1,
+  maxStepReached: 1,
+  systemType: null,
+  mainProtection: { phase:'1 Phase', voltage:'230', mainBreaker:'', rccb:'', mainCableSize:'' },
+  brand: null,
+  customPackages: [],
+  selectedPackageId: null,
+  editedPackage: null, // working copy of selected package (editable)
+  stringConfig: { numStrings:'1', panelsPerString:'', panelsPerStringA:'', panelsPerStringB:'' }, // PV string arrangement, set once package selected
+  accessories: { gateway:false, optimizer:false }, // optional device install toggles, shown in SLD only when checked
+  excelImport: { fileName:null, packages:[], status:null }, // packages loaded from an uploaded Excel catalog file
+  calcResults: null,
+};
+
+function allPackages(){ return DEFAULT_PACKAGES.concat(state.excelImport.packages).concat(state.customPackages); }
+
+function goStep(n){
+  if(n > state.maxStepReached) return;
+  state.step = n;
+  render();
+}
+function nextStep(){
+  state.step = Math.min(7, state.step+1);
+  state.maxStepReached = Math.max(state.maxStepReached, state.step);
+  render();
+}
+function prevStep(){
+  state.step = Math.max(1, state.step-1);
+  render();
+}
+
+/* ====================== RENDER: SHELL ====================== */
+function renderStepper(){
+  const el = document.getElementById('stepper');
+  el.innerHTML = STEP_DEFS.map(s=>{
+    let cls = 'step';
+    let isDone = false;
+    if(s.id === state.step) cls += ' active';
+    else if(s.id < state.step || (s.id<=state.maxStepReached && s.id!==state.step)){ cls += ' done'; isDone = true; }
+    if(s.id > state.maxStepReached) cls += ' locked';
+    return `<div class="${cls}" onclick="goStep(${s.id})">
+      <div class="rail"></div>
+      <div class="node">${isDone ? '✓' : s.id}</div>
+      <div class="label">${s.label}</div>
+      <div class="sub">${s.sub}</div>
+    </div>`;
+  }).join('');
+}
+
+function topSummaryText(){
+  const bits = [];
+  if(state.systemType) bits.push(state.systemType);
+  if(state.mainProtection.phase) bits.push(state.mainProtection.phase);
+  if(state.brand) bits.push(state.brand);
+  return bits.join(' · ');
+}
+
+function render(){
+  renderStepper();
+  const def = STEP_DEFS[state.step-1];
+  document.getElementById('pageHeading').textContent = def.label;
+  document.getElementById('crumb').textContent = `STEP ${def.id} / 7 — ${def.sub.toUpperCase()}`;
+  document.getElementById('topSummary').textContent = topSummaryText();
+  const content = document.getElementById('content');
+  content.innerHTML = '';
+  const pageFns = [renderPage1, renderPage2, renderPage3, renderPage4, renderPage5, renderPage6, renderPage7];
+  content.appendChild(pageFns[state.step-1]());
+  window.scrollTo(0,0);
+}
+
+function el(html){
+  const d = document.createElement('div');
+  d.innerHTML = html.trim();
+  return d.firstElementChild;
+}
+
+/* ====================== PAGE 1: SYSTEM TYPE ====================== */
+const SYS_TYPES = [
+  {id:'On-grid', name:'On-grid', desc:'ต่อเชื่อมระบบไฟฟ้ากับการไฟฟ้า ไม่มีแบตเตอรี่สำรอง', icon:`<svg viewBox="0 0 46 46"><rect x="4" y="20" width="10" height="18" rx="1" fill="none" stroke="#5B2582" stroke-width="2"/><path d="M9 20 L9 8 M4 8 L14 8" stroke="#5B2582" stroke-width="2"/><rect x="26" y="14" width="16" height="24" rx="2" fill="none" stroke="#20242C" stroke-width="2"/><path d="M14 26 L26 26" stroke="#20242C" stroke-width="2"/><path d="M32 20 L36 20 L30 28 L34 28 L28 34" stroke="#5B2582" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>`},
+  {id:'Off-grid', name:'Off-grid', desc:'ระบบอิสระ ไม่พึ่งพาการไฟฟ้า ใช้แบตเตอรี่เก็บพลังงาน', icon:`<svg viewBox="0 0 46 46"><rect x="4" y="20" width="10" height="18" rx="1" fill="none" stroke="#5B2582" stroke-width="2"/><path d="M9 20 L9 8 M4 8 L14 8" stroke="#5B2582" stroke-width="2"/><rect x="18" y="14" width="12" height="24" rx="2" fill="none" stroke="#20242C" stroke-width="2"/><rect x="32" y="18" width="10" height="16" rx="1" fill="none" stroke="#F58220" stroke-width="2"/><path d="M35 22 L39 22 M35 26 L39 26 M35 30 L39 30" stroke="#F58220" stroke-width="1.6"/></svg>`},
+  {id:'Hybrid', name:'Hybrid', desc:'ต่อเชื่อมการไฟฟ้าและมีแบตเตอรี่สำรองในระบบเดียวกัน', icon:`<svg viewBox="0 0 46 46"><rect x="2" y="20" width="9" height="18" rx="1" fill="none" stroke="#5B2582" stroke-width="2"/><path d="M6.5 20 L6.5 8 M2 8 L11 8" stroke="#5B2582" stroke-width="2"/><rect x="18" y="14" width="12" height="24" rx="2" fill="none" stroke="#20242C" stroke-width="2"/><rect x="35" y="18" width="9" height="16" rx="1" fill="none" stroke="#F58220" stroke-width="2"/><path d="M11 27 L18 27 M30 27 L35 27" stroke="#20242C" stroke-width="2"/></svg>`},
+];
+function renderPage1(){
+  const p = el(`<div class="page active" id="p1"></div>`);
+  p.innerHTML = `
+    <h2 class="page-title">เลือกประเภทระบบโซลาร์</h2>
+    <p class="page-desc">เลือกประเภทของระบบ Solar Photovoltaic ที่จะออกแบบ ระบบจะกรองแพ็คเก็จอุปกรณ์และการคำนวณให้ตรงกับประเภทที่เลือกในขั้นตอนถัดไป</p>
+    <div class="sys-grid">
+      ${SYS_TYPES.map(s=>`
+        <div class="sys-card ${state.systemType===s.id?'selected':''}" onclick="selectSystemType('${s.id}')">
+          <div class="icon">${s.icon}</div>
+          <div class="name">${s.name}</div>
+          <div class="desc">${s.desc}</div>
+        </div>`).join('')}
+    </div>
+    <div class="actions-row">
+      <span></span>
+      <div class="right"><button class="btn btn-primary" ${!state.systemType?'disabled':''} onclick="nextStep()">ถัดไป: Main Origin Protection →</button></div>
+    </div>
+  `;
+  return p;
+}
+function selectSystemType(id){
+  state.systemType = id;
+  // reset downstream selections since package pool changes
+  state.brand = null; state.selectedPackageId = null; state.editedPackage = null;
+  render();
+}
+
+/* ====================== PAGE 2: MAIN ORIGIN PROTECTION ====================== */
+function renderPage2(){
+  const mp = state.mainProtection;
+  const p = el(`<div class="page active" id="p2"></div>`);
+  p.innerHTML = `
+    <h2 class="page-title">ข้อมูล Main Origin Protection (ฝั่ง Grid)</h2>
+    <p class="page-desc">วิศวกรกรอกข้อมูลระบบป้องกันหลักฝั่งการไฟฟ้า ค่าตัวเลขทั้งหมดสามารถแก้ไขได้อิสระเพื่อความแม่นยำในการคำนวณขั้นตอนถัดไป</p>
+    <div class="card">
+      <h3>Phase ระบบไฟฟ้า</h3>
+      <div class="radio-row">
+        <div class="radio-opt ${mp.phase==='1 Phase'?'selected':''}" onclick="setMPPhase('1 Phase')">1 Phase (220–230V)</div>
+        <div class="radio-opt ${mp.phase==='3 Phase'?'selected':''}" onclick="setMPPhase('3 Phase')">3 Phase (380–400V)</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>พารามิเตอร์ระบบป้องกัน <span>ค่าทั้งหมดกรอกได้อิสระ ไม่ล็อกค่า</span></h3>
+      <div class="form-grid">
+        <div class="field">
+          <label>System Voltage (V)</label>
+          <input type="text" value="${mp.voltage}" oninput="setMPField('voltage', this.value)">
+          <span class="hint">เช่น 230 (1 Phase) หรือ 400 (3 Phase)</span>
+        </div>
+        <div class="field">
+          <label>Main Breaker ขนาด (A)</label>
+          <input type="text" value="${mp.mainBreaker}" oninput="setMPField('mainBreaker', this.value)" placeholder="เช่น 50">
+        </div>
+        <div class="field">
+          <label>RCCB / ELCB ขนาด (mA / A)</label>
+          <input type="text" value="${mp.rccb}" oninput="setMPField('rccb', this.value)" placeholder="เช่น 63A/30mA">
+        </div>
+        <div class="field">
+          <label>ขนาดสาย Main (Grid side) (mm²)</label>
+          <input type="text" value="${mp.mainCableSize}" oninput="setMPField('mainCableSize', this.value)" placeholder="เช่น 16">
+        </div>
+      </div>
+    </div>
+    <div class="actions-row">
+      <button class="btn btn-ghost" onclick="prevStep()">← ย้อนกลับ</button>
+      <div class="right"><button class="btn btn-primary" onclick="nextStep()">ถัดไป: เลือกแพ็คเก็จอุปกรณ์ →</button></div>
+    </div>
+  `;
+  return p;
+}
+function setMPField(k,v){ state.mainProtection[k]=v; }
+function setMPPhase(v){ state.mainProtection.phase=v; render(); }
+
+/* ====================== PAGE 3: BRAND & PACKAGE SELECTION ====================== */
+const BRANDS = []; // ไม่ผูกยี่ห้อไว้ล่วงหน้า — รายชื่อยี่ห้อจะรวบรวมจากแพ็คเก็จที่ผู้ใช้นำเข้า/เพิ่มเองทั้งหมด
+function getAvailableBrands(){
+  const extra = Array.from(new Set(allPackages().map(p=>p.invBrand))).filter(b=>b && !BRANDS.includes(b));
+  return BRANDS.concat(extra.sort());
+}
+
+function filteredBySystemPhase(){
+  return allPackages().filter(p => p.system===state.systemType && p.phase===state.mainProtection.phase);
+}
+function renderPage3(){
+  const p = el(`<div class="page active" id="p3"></div>`);
+  if(!state.systemType){
+    p.innerHTML = `<div class="empty">กรุณาเลือกประเภทระบบในขั้นตอนที่ 1 ก่อน</div>
+      <div class="actions-row"><button class="btn btn-ghost" onclick="prevStep()">← ย้อนกลับ</button><span></span></div>`;
+    return p;
+  }
+  const pool = filteredBySystemPhase();
+  const brandList = getAvailableBrands();
+  const brandCounts = {};
+  brandList.forEach(b => brandCounts[b] = pool.filter(x=>x.invBrand===b).length);
+
+  let html = `<h2 class="page-title">เลือกยี่ห้อและแพ็คเก็จอุปกรณ์</h2>
+    <p class="page-desc">ระบบ: <b>${state.systemType}</b> · Main Origin Protection: <b>${state.mainProtection.phase}</b> — รายการแพ็คเก็จจะกรองให้ตรงกับ Phase ที่เลือกไว้เท่านั้น</p>
+    <div class="card">
+      <h3>1. เลือกยี่ห้ออินเวอร์เตอร์ <span>เลือกได้ 1 ยี่ห้อ</span></h3>
+      <div class="brand-grid">
+        ${brandList.map(b=>`
+          <div class="brand-card ${state.brand===b?'selected':''} ${brandCounts[b]===0?'disabled':''}" onclick="${brandCounts[b]>0?`selectBrand('${b}')`:''}">
+            <div class="bname">${b}</div>
+            <div class="bcount">${brandCounts[b]} แพ็คเก็จ</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+
+  if(pool.length===0){
+    html += `<div class="empty">ยังไม่มีแพ็คเก็จสำหรับ ${state.systemType} / ${state.mainProtection.phase} ในระบบ<br>นำเข้าแพ็คเก็จจากไฟล์ Excel (แผงด้านซ้าย) หรือเพิ่มแพ็คเก็จใหม่ได้ด้านล่าง</div>`;
+  }
+
+  if(state.brand){
+    const list = pool.filter(x=>x.invBrand===state.brand);
+    html += `<div class="card">
+      <h3>2. เลือกแพ็คเก็จ (${state.brand}) <span>${list.length} รายการ</span></h3>
+      <div class="pkg-list">
+        ${list.map(pk=>`
+          <div class="pkg-card ${state.selectedPackageId===pk.id?'selected':''}" onclick="selectPackage('${pk.id}')">
+            ${(pk.custom||pk.source==='excel')?`<button class="del" onclick="event.stopPropagation();deletePackage('${pk.id}')">ลบ ✕</button>`:''}
+            <div class="model">${pk.invModel}</div>
+            <div class="meta"><span class="tag ${(pk.custom||pk.source==='excel')?'custom':''}">${pk.custom?'CUSTOM':(pk.source==='excel'?'EXCEL':pk.system.toUpperCase())}</span>${pk.invKw} kW · ${pk.phase} ${pk.battBrand!=='-'?' · มีแบตเตอรี่':''}</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  if(state.selectedPackageId && state.editedPackage){
+    html += renderPackageDetailHTML(state.editedPackage);
+    html += renderAccessoriesHTML();
+  }
+
+  html += `<div class="card no-print" style="text-align:center;">
+      <button class="btn btn-ghost" onclick="openAddModal()">+ เพิ่มแพ็คเก็จใหม่</button>
+    </div>`;
+
+  html += `<div class="actions-row">
+      <button class="btn btn-ghost" onclick="prevStep()">← ย้อนกลับ</button>
+      <div class="right"><button class="btn btn-primary" ${!state.selectedPackageId?'disabled':''} onclick="saveDataAndProceed()">บันทึกข้อมูล →</button></div>
+    </div>`;
+
+  p.innerHTML = html;
+  return p;
+}
+
+function selectBrand(b){ state.brand=b; state.selectedPackageId=null; state.editedPackage=null; render(); }
+
+function selectPackage(id){
+  const pk = allPackages().find(x=>x.id===id);
+  state.selectedPackageId = id;
+  state.editedPackage = Object.assign({}, pk); // shallow copy = editable working copy
+  const qty = parseFirstNumber(pk.panelQty);
+  const n = parseInt(state.stringConfig.numStrings || '1');
+  const half = !isNaN(qty) ? Math.ceil(qty / 2) : '';
+  const halfB = !isNaN(qty) ? Math.floor(qty / 2) : '';
+  state.stringConfig = {
+    numStrings: String(n),
+    panelsPerString: String(!isNaN(qty) ? Math.round(qty / n) : ''),
+    panelsPerStringA: String(half),
+    panelsPerStringB: String(halfB),
+  };
+  state.accessories = { gateway:false, optimizer:false };
+  state.calcResults = null;
+  render();
+}
+
+function deletePackage(id){
+  state.customPackages = state.customPackages.filter(x=>x.id!==id);
+  state.excelImport.packages = state.excelImport.packages.filter(x=>x.id!==id);
+  if(state.excelImport.packages.length===0) state.excelImport.fileName = null;
+  if(state.selectedPackageId===id){ state.selectedPackageId=null; state.editedPackage=null; }
+  renderExcelImportPanel();
+  render();
+}
+
+const GROUP_ORDER = ['ทั่วไป','Inverter','Battery','Solar Panel','Protection'];
+function renderPackageDetailHTML(pkg){
+  const groups = {};
+  PKG_FIELDS.forEach(f=>{ (groups[f.grp] = groups[f.grp]||[]).push(f); });
+  let rows = '';
+  GROUP_ORDER.forEach(g=>{
+    rows += `<tr><td colspan="2"><span class="section-tag">${g}</span></td></tr>`;
+    groups[g].forEach(f=>{
+      const editable = !['system','phase'].includes(f.k);
+      rows += `<tr><th>${f.label}</th><td>${editable?
+        `<input type="text" value="${(pkg[f.k]??'').toString().replace(/"/g,'&quot;')}" oninput="editPkgField('${f.k}', this.value)">`
+        : `<b>${pkg[f.k]}</b>`}</td></tr>`;
+    });
+  });
+  return `<div class="card">
+    <h3>3. รายละเอียดแพ็คเก็จ <span>แก้ไขค่าตัวเลข/สตริงได้โดยตรงเพื่อความแม่นยำ</span></h3>
+    <table class="dtable">${rows}</table>
+  </div>`;
+}
+function editPkgField(k,v){ if(state.editedPackage) state.editedPackage[k]=v; }
+
+function renderAccessoriesHTML(){
+  const acc = state.accessories;
+  return `<div class="card">
+    <h3>4. อุปกรณ์เสริม (Accessories) <span>เลือกเฉพาะรายการที่ติดตั้งจริงในโครงการนี้ — จะแสดงใน Single Line Diagram เท่านั้นเมื่อติ๊กเลือก</span></h3>
+    <div class="form-grid">
+      <label class="field" style="flex-direction:row;align-items:center;gap:10px;cursor:pointer;">
+        <input type="checkbox" style="width:18px;height:18px;" ${acc.gateway?'checked':''} onchange="toggleAccessory('gateway', this.checked)">
+        <span style="font-size:13px;font-weight:600;">ติดตั้ง Gateway <span style="font-weight:400;color:var(--ink-soft);">(อุปกรณ์สื่อสาร/มอนิเตอร์ริ่งผ่าน WiFi-LAN)</span></span>
+      </label>
+      <label class="field" style="flex-direction:row;align-items:center;gap:10px;cursor:pointer;">
+        <input type="checkbox" style="width:18px;height:18px;" ${acc.optimizer?'checked':''} onchange="toggleAccessory('optimizer', this.checked)">
+        <span style="font-size:13px;font-weight:600;">ติดตั้ง Power Optimizer <span style="font-weight:400;color:var(--ink-soft);">(ต่อร่วมกับแผงโซลาร์แต่ละแผง/สตริง)</span></span>
+      </label>
+    </div>
+  </div>`;
+}
+function toggleAccessory(key, val){ state.accessories[key] = val; render(); }
+
+function saveDataAndProceed(){
+  if(!state.selectedPackageId) return;
+  nextStep();
+}
+
+/* ====================== ADD PACKAGE MODAL ====================== */
+let newPkgDraft = {};
+function openAddModal(){
+  newPkgDraft = { system: state.systemType || 'Hybrid', phase: state.mainProtection.phase || '1 Phase', invBrand: state.brand || '' };
+  PKG_FIELDS.forEach(f=>{ if(!(f.k in newPkgDraft)) newPkgDraft[f.k]=''; });
+  const formEl = document.getElementById('addForm');
+  const groups = {};
+  PKG_FIELDS.forEach(f=>{ (groups[f.grp]=groups[f.grp]||[]).push(f); });
+  let html = '';
+  GROUP_ORDER.forEach(g=>{
+    html += `<div class="field full"><span class="section-tag">${g}</span></div>`;
+    groups[g].forEach(f=>{
+      if(f.k==='system'){
+        html += `<div class="field"><label>${f.label}</label>
+          <select onchange="newPkgDraft['${f.k}']=this.value">
+            <option value="On-grid">On-grid</option><option value="Off-grid">Off-grid</option><option value="Hybrid">Hybrid</option>
+          </select></div>`;
+      } else if(f.k==='phase'){
+        html += `<div class="field"><label>${f.label}</label>
+          <select onchange="newPkgDraft['${f.k}']=this.value">
+            <option value="1 Phase">1 Phase</option><option value="3 Phase">3 Phase</option>
+          </select></div>`;
+      } else if(f.k==='invBrand'){
+        html += `<div class="field"><label>${f.label}</label>
+          <select onchange="newPkgDraft['${f.k}']=this.value">
+            ${getAvailableBrands().map(b=>`<option value="${b}">${b}</option>`).join('')}
+          </select>
+          <span class="hint">เลือกจากยี่ห้อที่มีอยู่ในระบบ (รวมยี่ห้อจากไฟล์ Excel ที่นำเข้า)</span></div>`;
+      } else {
+        html += `<div class="field"><label>${f.label}</label>
+          <input type="text" placeholder="-" oninput="newPkgDraft['${f.k}']=this.value"></div>`;
+      }
+    });
+  });
+  formEl.innerHTML = html;
+  // set select defaults visually
+  const sels = formEl.querySelectorAll('select');
+  sels[0].value = newPkgDraft.system; sels[1].value = newPkgDraft.phase; sels[2].value = newPkgDraft.invBrand;
+  document.getElementById('addModalBg').classList.add('show');
+}
+function closeAddModal(){ document.getElementById('addModalBg').classList.remove('show'); }
+function saveNewPackage(){
+  if(!newPkgDraft.invBrand || !newPkgDraft.invModel){
+    alert('กรุณากรอกอย่างน้อย Inverter Brand และ Inverter Model');
+    return;
+  }
+  const pkg = { id: uid(), custom: true };
+  PKG_FIELDS.forEach(f=>{ pkg[f.k] = newPkgDraft[f.k] || '-'; });
+  state.customPackages.push(pkg);
+  closeAddModal();
+  state.brand = pkg.invBrand;
+  render();
+}
+
+/* ====================== PAGE 4: SUMMARY ====================== */
+function renderPage4(){
+  const p = el(`<div class="page active" id="p4"></div>`);
+  if(!state.editedPackage){
+    p.innerHTML = `<div class="empty">กรุณาเลือกแพ็คเก็จอุปกรณ์ในขั้นตอนที่ 3 ก่อน</div>
+      <div class="actions-row"><button class="btn btn-ghost" onclick="goStep(3)">← กลับไปเลือกแพ็คเก็จ</button><span></span></div>`;
+    return p;
+  }
+  const pk = state.editedPackage, mp = state.mainProtection;
+  p.innerHTML = `
+    <h2 class="page-title">สรุปข้อมูลโครงการ</h2>
+    <p class="page-desc">ตรวจสอบความถูกต้องของข้อมูลก่อนไปยังขั้นตอนคำนวณขนาดอุปกรณ์ป้องกัน</p>
+    <div class="sum-grid">
+      <div class="sum-block card">
+        <h4>ระบบ & Main Origin Protection</h4>
+        <div class="sum-row"><span class="k">ประเภทระบบ</span><span class="v">${state.systemType}</span></div>
+        <div class="sum-row"><span class="k">Phase</span><span class="v">${mp.phase}</span></div>
+        <div class="sum-row"><span class="k">System Voltage</span><span class="v">${mp.voltage||'—'} V</span></div>
+        <div class="sum-row"><span class="k">Main Breaker</span><span class="v">${mp.mainBreaker||'—'} A</span></div>
+        <div class="sum-row"><span class="k">RCCB/ELCB</span><span class="v">${mp.rccb||'—'}</span></div>
+        <div class="sum-row"><span class="k">สาย Main (Grid side)</span><span class="v">${mp.mainCableSize||'—'} mm²</span></div>
+      </div>
+      <div class="sum-block card">
+        <h4>Inverter</h4>
+        <div class="sum-row"><span class="k">ยี่ห้อ / รุ่น</span><span class="v">${pk.invBrand} ${pk.invModel}</span></div>
+        <div class="sum-row"><span class="k">กำลัง</span><span class="v">${pk.invKw} kW</span></div>
+        <div class="sum-row"><span class="k">Max AC Output Current</span><span class="v">${pk.maxACCurrent} A</span></div>
+        <div class="sum-row"><span class="k">AC Output Voltage</span><span class="v">${pk.acVoltage} V</span></div>
+        <div class="sum-row"><span class="k">Max DC Input Voltage</span><span class="v">${pk.maxDCVoltage} V</span></div>
+        <div class="sum-row"><span class="k">Max PV SC Current</span><span class="v">${pk.maxPVSCCurrent}</span></div>
+      </div>
+      <div class="sum-block card">
+        <h4>Battery</h4>
+        ${pk.battBrand==='-' ? `<div class="sum-row"><span class="k">สถานะ</span><span class="v">ไม่มีแบตเตอรี่ในแพ็คเก็จนี้</span></div>` : `
+        <div class="sum-row"><span class="k">ยี่ห้อ / รุ่น</span><span class="v">${pk.battBrand} ${pk.battModel}</span></div>
+        <div class="sum-row"><span class="k">ความจุ</span><span class="v">${pk.battKwh} kWh</span></div>
+        <div class="sum-row"><span class="k">แรงดัน</span><span class="v">${pk.battVoltage} V</span></div>
+        <div class="sum-row"><span class="k">Max Charge / Discharge</span><span class="v">${pk.maxChargeCurrent} / ${pk.maxDischargeCurrent} A</span></div>`}
+      </div>
+      <div class="sum-block card">
+        <h4>Solar Panel</h4>
+        <div class="sum-row"><span class="k">ยี่ห้อ / รุ่น</span><span class="v">${pk.panelBrand} ${pk.panelModel}</span></div>
+        <div class="sum-row"><span class="k">จำนวนแผง</span><span class="v">${pk.panelQty} แผง × ${pk.panelWp} Wp</span></div>
+        <div class="sum-row"><span class="k">กำลังรวม</span><span class="v">${pk.panelTotalWp} Wp</span></div>
+        <div class="sum-row"><span class="k">Voc / Isc</span><span class="v">${pk.voc} / ${pk.isc}</span></div>
+        <div class="sum-row"><span class="k">Vmp / Imp</span><span class="v">${pk.vmp} / ${pk.imp}</span></div>
+      </div>
+    </div>
+    <div class="actions-row">
+      <button class="btn btn-ghost" onclick="goStep(3)">← แก้ไขแพ็คเก็จ</button>
+      <div class="right"><button class="btn btn-primary" onclick="runCalcAndProceed()">คำนวณ MCB →</button></div>
+    </div>
+  `;
+  return p;
+}
+function runCalcAndProceed(){
+  state.calcResults = computeProtection();
+  nextStep();
+}
+
+/* ====================== CALCULATION ENGINE (PEA-style practice) ====================== */
+// Fine-grained standard sizes used where coarse jumps would over-provision (battery DC breakers)
+const BATT_BREAKER_SIZES = [16,20,25,32,40,50,63,80,100,110,125,140,150,160,175,200,225,250,275,300,350,400,450,500,630];
+function pickFromList(current, list){
+  for(const v of list){ if(v >= current) return v; }
+  return list[list.length-1];
+}
+
+function computeProtection(){
+  const pk = state.editedPackage, mp = state.mainProtection;
+  const notes = [];
+  const is1p = mp.phase === '1 Phase';
+  const invKw = parseFirstNumber(pk.invKw) || 0;
+  const isSmallInverter = invKw <= 15; // per spec: fixed SPD rating applies for inverter size <=15kW
+
+  // ---- AC (inverter output / grid interconnection) ----
+  const maxAC = parseFirstNumber(pk.maxACCurrent);
+  let acBreakerCalc = pickStdBreaker(maxAC * 1.25);
+  // Standard minimum rating convention for Inverter <=15kW: field-standard AC MCB is 32A (smallest commonly stocked size
+  // that also covers inverter start-up/inrush current). If the actual design current demands a larger breaker, the
+  // higher calculated value always takes priority for safety — the 32A is a floor, never a ceiling.
+  if(isSmallInverter) acBreakerCalc = Math.max(acBreakerCalc, 32);
+  // Field-practice minimum: for systems ≤10kW, 6mm² is the practical minimum cable size for both AC and DC
+  // (a pure ampacity calc could land on 4mm², which is technically enough but too small/fragile to work with
+  // on-site) — so the ampacity-based pick is floored at 6mm² whenever the inverter size is ≤10kW.
+  const isSmallSystemCable = invKw > 0 && invKw <= 10;
+  let acCable = pickCable(acBreakerCalc);
+  const acCableBeforeFloor = acCable;
+  if(isSmallSystemCable) acCable = enforceMinCableSize(acCable, 6);
+
+  // AC Surge Protection Device — fixed spec for inverter <=15kW per engineering standard adopted, otherwise scale with phase voltage
+  const acSpd = isSmallInverter
+    ? { uc:'275 V (Type 2, PV)', in:'20 kA', imax:'40 kA', up:'≤ 1.5 kV' }
+    : { uc: is1p ? '275 V (Type 2, Uc ≥ 1.1×230V)' : '385 V (Type 2, Uc ≥ 1.1×400V, ต่อแบบ 3P+N)', in:'20 kA (8/20µs)', imax:'40 kA', up:'≤ 1.5 kV' };
+
+  const mainBreakerUser = parseFirstNumber(mp.mainBreaker);
+  if(!isNaN(mainBreakerUser) && mainBreakerUser < acBreakerCalc){
+    notes.push({t:'warn', m:`Main Breaker ที่กรอกไว้ (${mainBreakerUser} A) น้อยกว่าค่าที่แนะนำสำหรับ Inverter นี้ (${acBreakerCalc} A) ควรตรวจสอบขนาดใหม่`});
+  } else if(!isNaN(mainBreakerUser)){
+    notes.push({t:'ok', m:`Main Breaker ที่กรอกไว้ (${mainBreakerUser} A) เพียงพอต่อ Inverter (ต้องการ ≥ ${acBreakerCalc} A)`});
+  } else {
+    notes.push({t:'info', m:'ยังไม่ได้กรอกขนาด Main Breaker ในขั้นตอนที่ 2 — ใช้ค่าที่คำนวณได้แทน'});
+  }
+
+  const mainCableUser = parseFirstNumber(mp.mainCableSize);
+  if(!isNaN(mainCableUser) && mainCableUser < acCable.mm2){
+    notes.push({t:'warn', m:`ขนาดสาย Main ที่กรอกไว้ (${mainCableUser} mm²) เล็กกว่าค่าที่แนะนำ (${acCable.mm2} mm² @ ${acCable.a} A) ควรพิจารณาเพิ่มขนาดสาย`});
+  }
+  if(isSmallSystemCable && acCableBeforeFloor.mm2 < acCable.mm2){
+    notes.push({t:'info', m:`ระบบ Inverter ≤10kW: ปรับขนาดสาย AC ขั้นต่ำเป็น ${acCable.mm2} mm² (จากค่าคำนวณตามกระแสจริงที่ได้ ${acCableBeforeFloor.mm2} mm²) ตามมาตรฐานการใช้งานภาคสนาม`});
+  }
+
+  // ---- AC RCBO (Residual Current Breaker with Overcurrent protection) ----
+  // In(RCBO) is always matched to the AC MCB rating above (32A floor for <=15kW, or higher if design current requires it)
+  // so overcurrent + earth-leakage protection stay coordinated on the same trip rating; residual sensitivity fixed at 30mA
+  // for personal/fire protection per IEC 61008/61009.
+  // Type: PV/hybrid inverters can generate a smooth DC fault current that a standard Type A RCD cannot reliably detect,
+  // so IEC 62109-2 / IEC 60364-7-712 require an RCD/RCBO of Type B by default. Type A is only acceptable when the
+  // inverter has its own certified integrated residual DC current monitoring unit (RDC-DD) that trips at <=6 mA DC,
+  // tested and listed together with that specific Type A device — otherwise Type B is mandatory. Type B is therefore
+  // always the stated/default rating on the drawing; the Type A exception is called out as a note, not the headline spec.
+  const rcboIn = acBreakerCalc;
+  const rcboTypeShort = 'Type B';
+  const rcboTypeNote = 'บังคับใช้ Type B ตาม IEC 62109-2 / IEC 60364-7-712 เนื่องจากอินเวอร์เตอร์โซลาร์/ไฮบริดสามารถเกิดกระแสรั่วไหลไฟตรง (Smooth DC Fault Current) ที่ RCD Type A ทั่วไปตรวจจับไม่ได้ — ใช้ Type A แทนได้เฉพาะกรณีอินเวอร์เตอร์มีระบบตรวจจับกระแสรั่วไหล DC ในตัว (RDC-DD) ที่ตัดวงจรที่ ≤6 mA DC และผ่านการทดสอบ/ขึ้นทะเบียนรับรองร่วมกับ RCD Type A ตัวนั้นโดยเฉพาะเท่านั้น';
+  const rcboAvailable = rcboIn <= 63; // single RCBO devices commonly available up to 63A
+  const rcboIcn = rcboIn <= 32 ? '6 kA' : (rcboIn <= 63 ? '10 kA' : '10 kA (พิจารณา MCCB+RCCB แยกชุด)');
+  const rcbo = {
+    in: rcboIn,
+    sensitivity: '30 mA',
+    type: rcboTypeShort,
+    typeNote: rcboTypeNote,
+    icn: rcboIcn,
+    poles: is1p ? '2 Pole (1P+N)' : '4 Pole (3P+N)',
+    available: rcboAvailable,
+  };
+  if(!rcboAvailable){
+    notes.push({t:'warn', m:`พิกัดกระแสที่ต้องการ (${rcboIn} A) เกินช่วงที่ผลิต RCBO เดี่ยวทั่วไป (ปกติ ≤63A) แนะนำใช้ MCCB ร่วมกับ RCCB แยกชุดแทนการใช้ RCBO ตัวเดียว`});
+  } else {
+    notes.push({t:'ok', m:`RCBO ฝั่ง AC แนะนำพิกัด ${rcboIn} A / 30 mA / ${rcbo.poles} (สอดคล้องกับ AC MCB เสมอ), ชนิด ${rcboTypeShort}, พิกัดตัดกระแสลัดวงจร (Icn) ${rcboIcn}`});
+  }
+  if(isSmallInverter){
+    notes.push({t:'info', m:`Inverter ≤15kW: ใช้พิกัดมาตรฐานขั้นต่ำ AC MCB/RCBO = 32 A (ครอบคลุมกระแสออกแบบจริง ${fmt(maxAC,'A')} และกระแสกระชากขณะสตาร์ท) หากมีหลายอินเวอร์เตอร์ขนานกันต้องคำนวณ Main Breaker ฝั่ง Grid แยกต่างหาก`});
+  }
+
+  const ac = {
+    breakerCalc: acBreakerCalc,
+    cable: acCable,
+    spd: acSpd,
+    designCurrent: maxAC,
+    rcbo,
+  };
+
+  // ---- PV STRING CONFIGURATION ----
+  // numStrings: number of parallel strings (1 or 2, user-selectable).
+  // For 2 strings, panel counts can be entered separately per string (panelsPerStringA / B) so uneven totals that
+  // don't divide evenly (e.g. 17 panels = 9+8) can be modeled exactly instead of forcing an equal split.
+  const numStrings = Math.max(1, parseInt(state.stringConfig.numStrings) || 1);
+  let stringPanelCounts; // array of panel counts per individual string, e.g. [9,8] or [10]
+  if(numStrings === 2){
+    const a = parseFirstNumber(state.stringConfig.panelsPerStringA) || 0;
+    const b = parseFirstNumber(state.stringConfig.panelsPerStringB) || 0;
+    stringPanelCounts = [a, b];
+  } else {
+    stringPanelCounts = [parseFirstNumber(state.stringConfig.panelsPerString) || 0];
+  }
+  const panelsPerStringMax = Math.max(...stringPanelCounts); // worst-case series count, used for voltage-stress checks
+  const totalPanelsInStrings = stringPanelCounts.reduce((a,b)=>a+b, 0);
+  const panelsUneven = numStrings === 2 && stringPanelCounts[0] !== stringPanelCounts[1];
+
+  const panelVoc = parseFirstNumber(pk.voc);
+  const panelIsc = parseFirstNumber(pk.isc);
+  const panelVmp = parseFirstNumber(pk.vmp);
+  const panelImp = parseFirstNumber(pk.imp);
+  const TEMP_CORR = 1.15; // simplified low-temperature Voc correction factor (IEC 60364-7-712 practice); verify with module datasheet temp. coefficient for final design
+
+  // Voc/Vmp stress is evaluated on the LONGEST string (most panels in series) — the worst case for overvoltage,
+  // regardless of how the remaining panels are distributed across the other string(s).
+  const stringVocRaw = panelVoc * panelsPerStringMax;
+  const stringVoc = stringVocRaw * TEMP_CORR;
+  const stringVmp = panelVmp * panelsPerStringMax;
+  // Per-string breakdown (one entry per physical string, e.g. [String1, String2]) — needed whenever numStrings===2
+  // because an uneven panel split (e.g. 9+8) gives each string a DIFFERENT Voc/Vmp; the single worst-case value
+  // above is still what's used for the overvoltage safety checks below, but the MCB calculation page shows the
+  // per-string figures individually so String 1 and String 2 are never confused with one another.
+  const stringVocRawArr = stringPanelCounts.map(n => panelVoc * n);
+  const stringVocArr    = stringVocRawArr.map(v => v * TEMP_CORR);
+  const stringVmpArr    = stringPanelCounts.map(n => panelVmp * n);
+  // Isc/Imp of the array is the sum of each string's short-circuit/operating current — independent of how many
+  // panels are in series within a string, so this is unaffected by an uneven split.
+  const arrayIsc = panelIsc * numStrings;
+  const arrayImp = panelImp * numStrings;
+
+  const maxDCVoltage = parseFirstNumber(pk.maxDCVoltage);
+  const maxSysV0 = parseFirstNumber(pk.maxSystemVoltage) || 1500;
+  const worstStringLabel = panelsUneven ? `String ที่ยาวที่สุด (${panelsPerStringMax} แผง จาก ${stringPanelCounts.join('+')})` : `${panelsPerStringMax} แผง`;
+  if(!isNaN(stringVoc) && !isNaN(maxDCVoltage) && stringVoc > maxDCVoltage){
+    notes.push({t:'warn', m:`Voc รวมต่อสตริง (คำนวณจาก${worstStringLabel} × ${fmt(panelVoc,'V')} × 1.15 = ${fmt(stringVoc,'V')}) เกิน Max DC Input Voltage ของอินเวอร์เตอร์ (${maxDCVoltage} V) ต้องลดจำนวนแผงต่อสตริง`});
+  } else if(!isNaN(stringVoc)){
+    notes.push({t:'ok', m:`Voc รวมต่อสตริง (คำนวณจาก${worstStringLabel}, ${fmt(stringVoc,'V')} รวมตัวคูณอุณหภูมิ 1.15) ไม่เกิน Max DC Input Voltage (${isNaN(maxDCVoltage)?'—':maxDCVoltage+' V'})`});
+  }
+  if(!isNaN(stringVocRaw) && stringVocRaw > maxSysV0){
+    notes.push({t:'warn', m:`Voc รวมต่อสตริง (${fmt(stringVocRaw,'V')}) เกิน Max System Voltage ของแผงโซลาร์ (${maxSysV0} V) ต้องลดจำนวนแผงต่อสตริงทันที`});
+  }
+  if(panelsUneven){
+    notes.push({t:'info', m:`แบ่งแผงไม่เท่ากันระหว่าง 2 String (${stringPanelCounts[0]} + ${stringPanelCounts[1]} = ${totalPanelsInStrings} แผง) — String 1: Voc ${fmt(stringVocArr[0],'V')} (×1.15) / Vmp ${fmt(stringVmpArr[0],'V')}, String 2: Voc ${fmt(stringVocArr[1],'V')} (×1.15) / Vmp ${fmt(stringVmpArr[1],'V')} — ใช้ค่า Voc สูงสุดจาก String ที่มีจำนวนแผงมากกว่าในการตรวจสอบ Max DC Input Voltage เพื่อความปลอดภัยสูงสุด (worst-case)`});
+  }
+
+  // ---- AC-side cross-check against combined DC power ----
+  // All DC power generated by every string (regardless of string count/split) converges through the inverter and
+  // exits at ONE single AC point to feed the home load / grid — so AC protection sizing must reflect the FULL
+  // combined DC contribution, not any single string. Max AC Output Current (used above for AC MCB/SPD/RCBO) is
+  // the inverter's own rated capacity, which by design already represents that single combined exit point; this
+  // check simply verifies the connected DC array is within the range the inverter is rated to convert.
+  const totalDCWp = (!isNaN(parseFirstNumber(pk.panelWp)) && totalPanelsInStrings>0) ? parseFirstNumber(pk.panelWp) * totalPanelsInStrings : NaN;
+  const dcAcRatio = (invKw>0 && !isNaN(totalDCWp)) ? totalDCWp / (invKw*1000) : NaN;
+  ac.dcAcCheck = { totalDCWp, dcAcRatio, numStrings };
+  if(!isNaN(dcAcRatio)){
+    if(dcAcRatio > 1.35){
+      notes.push({t:'warn', m:`กำลังไฟ DC รวมทุก String (${fmt(totalDCWp,'Wp')} จาก ${numStrings} String) เทียบกับกำลัง AC ของ Inverter (${invKw} kW) = อัตราส่วน DC/AC ${dcAcRatio.toFixed(2)} สูงกว่าช่วงปกติทั่วไป (1.0-1.3) อาจเกิด Clipping มาก ควรพิจารณาลดจำนวนแผงหรือเพิ่มขนาด Inverter`});
+    } else {
+      notes.push({t:'ok', m:`กำลังไฟ DC รวมทุก String (${fmt(totalDCWp,'Wp')}) มารวมกันที่จุดเดียวก่อนแปลงเป็น AC ออกจาก Inverter (${invKw} kW) — อัตราส่วน DC/AC = ${dcAcRatio.toFixed(2)} อยู่ในเกณฑ์ปกติ (1.0-1.3) ดังนั้นขนาดอุปกรณ์ฝั่ง AC (MCB/SPD/RCBO) ที่คำนวณจาก Max AC Output Current ของ Inverter ครอบคลุมกำลังไฟรวมจากทุก String แล้ว`});
+    }
+  }
+
+  // ---- DC (PV strings / MPPT combiner) ----
+  // Per-string independent protection scheme (per client spec): every String gets its own complete protection set
+  // BEFORE the strings combine — 2x DC Fuse per string (fuses both the +ve and -ve conductor), 1x DC MCB per string
+  // (isolator for that string), 1x DC SPD per string (surge protection for that string's cable run). All device
+  // QUANTITIES therefore scale directly with numStrings; only after this per-string protection do the strings
+  // electrically combine onto the shared DC bus feeding the inverter.
+  const maxPVSC = parseFirstNumber(pk.maxPVSCCurrent);
+  const maxPVIn = parseFirstNumber(pk.maxPVInputCurrent);
+
+  const fuseRequired = true;
+  const dcFuseCalc = !isNaN(panelIsc) ? pickStdFuse(panelIsc * 1.56) : NaN;
+  const suggestedFuse = parseFirstNumber(pk.suggestedDCFuse);
+  let dcFuseFinal = !isNaN(suggestedFuse) ? Math.max(suggestedFuse, dcFuseCalc||0) : dcFuseCalc;
+
+  // DC MCB is now a per-string isolator, so it is sized to ONE string's short-circuit current (panelIsc), not the
+  // combined array current — each string's MCB only ever carries that single string's current.
+  let dcMcbCalc = !isNaN(panelIsc) ? pickStdBreaker(panelIsc * 1.25) : (!isNaN(maxPVSC) ? pickStdBreaker(maxPVSC*1.25) : NaN);
+  const suggestedMcb = parseFirstNumber(pk.suggestedDCMCB);
+
+  // Standard minimum rating convention for Inverter <=15kW: field-standard DC Fuse/MCB is 25A (smallest commonly stocked
+  // PV-rated DC protective device size). Actual computed requirement always takes priority if higher, for safety.
+  if(isSmallInverter){
+    dcFuseFinal = isNaN(dcFuseFinal) ? 25 : Math.max(dcFuseFinal, 25);
+    dcMcbCalc = isNaN(dcMcbCalc) ? 25 : Math.max(dcMcbCalc, 25);
+  }
+  // Final DC MCB rating: same "take the higher of calculated vs. manufacturer-suggested" rule used for the DC Fuse
+  // above — this single value (not the raw calc-only figure) is what's shown everywhere else in the app (SLD,
+  // Protection Device Schedule, Report) so all pages always agree.
+  const dcMcbFinal = !isNaN(suggestedMcb) ? Math.max(suggestedMcb, dcMcbCalc||0) : dcMcbCalc;
+
+  // Cable: per-string cable sized to single-string Imp/Isc AND must carry at least the upstream fuse rating (cable
+  // ampacity Iz must be >= protective device In for correct discrimination); main DC bus cable (after all strings
+  // combine, running to the inverter) sized to the total combined array current.
+  let stringCable = pickCable(Math.max(panelImp||0, dcFuseFinal||0, 4));
+  let mainDcCable = pickCable(Math.max(arrayImp||maxPVIn||0, dcMcbFinal||0, 4));
+  const stringCableBeforeFloor = stringCable, mainDcCableBeforeFloor = mainDcCable;
+  if(isSmallSystemCable){
+    stringCable = enforceMinCableSize(stringCable, 6);
+    mainDcCable = enforceMinCableSize(mainDcCable, 6);
+  }
+  if(isSmallSystemCable && (stringCableBeforeFloor.mm2 < stringCable.mm2 || mainDcCableBeforeFloor.mm2 < mainDcCable.mm2)){
+    notes.push({t:'info', m:`ระบบ Inverter ≤10kW: ปรับขนาดสาย DC ขั้นต่ำเป็น 6 mm² (สาย DC ต่อสตริงจากคำนวณได้ ${stringCableBeforeFloor.mm2} mm² → ${stringCable.mm2} mm², สาย DC รวมจากคำนวณได้ ${mainDcCableBeforeFloor.mm2} mm² → ${mainDcCable.mm2} mm²) ตามมาตรฐานการใช้งานภาคสนาม`});
+  }
+
+  // DC Surge Protection Device — fixed spec for inverter <=15kW per engineering standard adopted
+  const dcVoltageClass = isSmallInverter
+    ? '800-1100 VDC'
+    : (maxSysV0 > 1000 ? '1500 VDC' : (maxSysV0 > 600 ? '1000 VDC' : '600 VDC'));
+  const dcSpdRating = `${dcVoltageClass} (Type 2, PV)`;
+  const dcSpdIn = '20 kA/pole';
+  const dcSpdImax = '40 kA';
+
+  if(!isNaN(dcFuseCalc) && !isNaN(suggestedFuse) && dcFuseCalc > suggestedFuse){
+    notes.push({t:'warn', m:`ค่า DC Fuse ที่คำนวณจาก Isc แผงจริง×1.56 (${dcFuseCalc} A) สูงกว่าค่าที่ผู้ผลิตอินเวอร์เตอร์แนะนำ (${suggestedFuse} A) ให้ยึดค่าที่มากกว่าคือ ${dcFuseFinal} A และตรวจสอบพิกัดขั้ว Combiner Box`});
+  }
+  notes.push({t:'ok', m:`ระบบ ${numStrings} String: ติดตั้งชุดป้องกันครบต่อสตริง — DC Fuse ${dcFuseFinal||'—'} A × ${2*numStrings} ชุด (2 ขั้ว/สตริง), DC MCB ${dcMcbFinal||'—'} A × ${numStrings} ชุด, DC SPD × ${numStrings} ชุด ก่อนรวมสายเข้า Main DC Bus`});
+  if(isSmallInverter){
+    notes.push({t:'info', m:`Inverter ≤15kW: ใช้พิกัดมาตรฐานขั้นต่ำ DC MCB/Fuse = 25 A ที่ ${dcVoltageClass} ต่อสตริง (คำนวณจากกระแส Isc ของแผงเดี่ยว ไม่ใช่กระแสอาเรย์รวม เนื่องจากอุปกรณ์ติดตั้งแยกก่อนรวมสาย) หากกระแสจริงเกิน 25A ระบบจะปรับเพิ่มพิกัดให้อัตโนมัติ`});
+  }
+
+  if(!isNaN(dcMcbCalc) && !isNaN(suggestedMcb) && dcMcbCalc !== suggestedMcb){
+    notes.push({t:'info', m:`DC MCB ต่อสตริง: ค่าที่คำนวณจาก Isc แผงเดี่ยว×1.25 (${dcMcbCalc} A) เทียบกับค่าที่ผู้ผลิตแนะนำ (${suggestedMcb} A) — ใช้ค่าที่มากกว่าคือ ${dcMcbFinal} A`});
+  }
+  if(!isNaN(maxPVIn) && !isNaN(arrayIsc) && arrayIsc > maxPVIn){
+    notes.push({t:'warn', m:`กระแสรวมของอาเรย์ (Isc รวม ${fmt(arrayIsc,'A')}) เกิน Max PV Input Current ของ MPPT (${maxPVIn} A) ควรลดจำนวนสตริงขนานหรือแยกไปยัง MPPT อื่น`});
+  }
+
+  const dc = {
+    fuseCalc: dcFuseCalc, fuseSuggested: suggestedFuse, fuseFinal: dcFuseFinal, fuseRequired,
+    fuseQty: 2*numStrings, // 2 fuses (both poles) per string, per client spec
+    mcbCalc: dcMcbCalc, mcbSuggested: suggestedMcb, mcbFinal: dcMcbFinal, mcbQty: numStrings, spdQty: numStrings,
+    stringCable, mainDcCable,
+    spdRating: dcSpdRating, spdIn: dcSpdIn, spdImax: dcSpdImax, voltageClass: dcVoltageClass,
+    maxSysV: maxSysV0,
+    numStrings, panelsPerString: panelsPerStringMax, stringPanelCounts, totalPanelsInStrings, panelsUneven,
+    stringVoc, stringVocRaw, stringVmp, stringVocRawArr, stringVocArr, stringVmpArr, arrayIsc, arrayImp,
+  };
+
+  // ---- Battery (if present) ----
+  let batt = null;
+  if(pk.battBrand !== '-'){
+    const chg = parseFirstNumber(pk.maxChargeCurrent);
+    const dis = parseFirstNumber(pk.maxDischargeCurrent);
+    const peak = parseFirstNumber(pk.peakCurrent);
+    const worst = Math.max(isNaN(chg)?0:chg, isNaN(dis)?0:dis);
+    // Precise sizing: battery packs are current-limited by BMS, so only a modest 5% margin is applied
+    // (not the 125% continuous-duty rule used for AC/thermal loads) to avoid unnecessary over-provisioning.
+    const battBreaker = worst>0 ? pickFromList(worst*1.05, BATT_BREAKER_SIZES) : NaN;
+    const battCable = worst>0 ? pickCable(worst) : {mm2:16, a:76};
+    batt = { chg, dis, peak, breaker: battBreaker, cable: battCable, voltage: parseFirstNumber(pk.battVoltage) };
+    notes.push({t:'info', m:`Battery Main Breaker (DC MCB) คำนวณแบบแม่นยำจากกระแสสูงสุดจริง (${fmt(worst,'A')} × 1.05 margin) = ${isNaN(battBreaker)?'—':battBreaker+' A'} — ควรติดตั้งร่วมกับ Battery Disconnect Switch (DC, 2 pole)`});
+  }
+
+  notes.push({t:'info', m:'ผลการคำนวณนี้เป็นแนวทางเบื้องต้นตามหลักปฏิบัติวิศวกรรมทั่วไป (IEC 60364 / แนวทาง PEA) ผู้ออกแบบต้องตรวจสอบและลงนามรับรองโดยวิศวกรไฟฟ้าที่ได้รับใบอนุญาตก่อนใช้งานจริง'});
+
+  return { ac, dc, batt, notes, generatedAt: new Date().toISOString() };
+}
+
+/* ====================== PAGE 5: MCB CALCULATION ====================== */
+function setStringConfig(field, val){
+  state.stringConfig[field] = val;
+  state.calcResults = computeProtection();
+  render();
+}
+function renderPage5(){
+  const p = el(`<div class="page active" id="p5"></div>`);
+  if(!state.editedPackage){
+    p.innerHTML = `<div class="empty">กรุณาเลือกแพ็คเก็จอุปกรณ์ก่อน</div>`;
+    return p;
+  }
+  if(!state.calcResults) state.calcResults = computeProtection();
+  const r = state.calcResults;
+  const pk = state.editedPackage;
+  const sc = state.stringConfig;
+
+  let battHtml = '';
+  if(r.batt){
+    battHtml = `<div class="calc-group">
+      <div class="ghead"><div class="gicon batt">B</div><div class="gtitle">Battery Side</div></div>
+      <table class="calc-table">
+        <tr><td>Max Charge / Discharge Current</td><td>${fmt(r.batt.chg,'A')} / ${fmt(r.batt.dis,'A')}</td></tr>
+        <tr><td>Battery Main Breaker (DC MCB) — คำนวณแม่นยำ (margin 5%)</td><td>${isNaN(r.batt.breaker)?'—':r.batt.breaker+' A'}</td></tr>
+        <tr><td>ขนาดสาย Battery แนะนำ</td><td>${r.batt.cable.mm2} mm² (พิกัด ${r.batt.cable.a} A)</td></tr>
+        <tr><td>แรงดันแบตเตอรี่</td><td>${fmt(r.batt.voltage,'V')}</td></tr>
+      </table>
+    </div>`;
+  }
+
+  p.innerHTML = `
+    <h2 class="page-title">คำนวณขนาดอุปกรณ์ป้องกัน (MCB / Fuse / SPD)</h2>
+    <p class="page-desc">คำนวณตามกระแสออกแบบของแพ็คเก็จ <b>${pk.invBrand} ${pk.invModel}</b> โดยใช้ตัวคูณความปลอดภัยมาตรฐาน (AC breaker ≥ 1.25×Imax, DC fuse ≥ 1.56×Isc) และตารางกระแสสายไฟอ้างอิง IEC 60364-5-52</p>
+
+    <div class="card">
+      <h3>โครงสร้างสตริงแผงโซลาร์ (PV String Configuration) <span>ปรับจำนวน String แล้วระบบจะคำนวณใหม่อัตโนมัติ</span></h3>
+      <div class="form-grid">
+        <div class="field">
+          <label>จำนวน String (ขนานเข้า MPPT เดียวกัน)</label>
+          <div class="radio-row">
+            <div class="radio-opt ${sc.numStrings==='1'?'selected':''}" onclick="setStringConfig('numStrings','1')">1 String</div>
+            <div class="radio-opt ${sc.numStrings==='2'?'selected':''}" onclick="setStringConfig('numStrings','2')">2 String</div>
+          </div>
+        </div>
+        ${sc.numStrings==='2' ? `
+        <div class="field">
+          <label>จำนวนแผงต่อ String 1 (ต่ออนุกรม)</label>
+          <input type="number" min="1" value="${sc.panelsPerStringA}" onchange="setStringConfig('panelsPerStringA', this.value)">
+        </div>
+        <div class="field">
+          <label>จำนวนแผงต่อ String 2 (ต่ออนุกรม)</label>
+          <input type="number" min="1" value="${sc.panelsPerStringB}" onchange="setStringConfig('panelsPerStringB', this.value)">
+          <span class="hint">แยกช่องอิสระ รองรับจำนวนแผงไม่ลงตัว เช่น 17 แผง = 9+8 — รวมทั้งอาเรย์ ≈ ${(parseFirstNumber(sc.panelsPerStringA)||0)+(parseFirstNumber(sc.panelsPerStringB)||0)} แผง (แพ็คเก็จระบุไว้ ${pk.panelQty} แผง)</span>
+        </div>` : `
+        <div class="field">
+          <label>จำนวนแผงต่อ 1 String (ต่ออนุกรม)</label>
+          <input type="number" min="1" value="${sc.panelsPerString}" onchange="setStringConfig('panelsPerString', this.value)">
+          <span class="hint">รวมทั้งอาเรย์ ≈ ${(parseInt(sc.numStrings)||1) * (parseFirstNumber(sc.panelsPerString)||0)} แผง (แพ็คเก็จระบุไว้ ${pk.panelQty} แผง)</span>
+        </div>`}
+      </div>
+      <table class="calc-table" style="margin-top:6px;">
+        ${sc.numStrings==='2' ? `
+        <tr><td>Voc รวมต่อ String 1 (${r.dc.stringPanelCounts[0]} แผง) — ไม่รวม/รวมตัวคูณอุณหภูมิ 1.15</td><td>${fmt(r.dc.stringVocRawArr[0],'V')} / ${fmt(r.dc.stringVocArr[0],'V')}</td></tr>
+        <tr><td>Vmp รวมต่อ String 1 (${r.dc.stringPanelCounts[0]} แผง)</td><td>${fmt(r.dc.stringVmpArr[0],'V')}</td></tr>
+        <tr><td>Voc รวมต่อ String 2 (${r.dc.stringPanelCounts[1]} แผง) — ไม่รวม/รวมตัวคูณอุณหภูมิ 1.15</td><td>${fmt(r.dc.stringVocRawArr[1],'V')} / ${fmt(r.dc.stringVocArr[1],'V')}</td></tr>
+        <tr><td>Vmp รวมต่อ String 2 (${r.dc.stringPanelCounts[1]} แผง)</td><td>${fmt(r.dc.stringVmpArr[1],'V')}</td></tr>
+        ${r.dc.panelsUneven ? `<tr><td colspan="2" style="color:var(--ink-soft);font-size:12.5px;">⚠ จำนวนแผงต่อ String ไม่เท่ากัน (${r.dc.stringPanelCounts[0]}+${r.dc.stringPanelCounts[1]}) — ใช้ค่า Voc สูงสุด (String ที่ยาวที่สุด) ในการตรวจสอบ Max DC Input Voltage ของอินเวอร์เตอร์เพื่อความปลอดภัยสูงสุด (worst-case) = ${fmt(r.dc.stringVoc,'V')}</td></tr>` : ''}
+        ` : `
+        <tr><td>Voc รวมต่อสตริง (ไม่รวม/รวมตัวคูณอุณหภูมิ 1.15)</td><td>${fmt(r.dc.stringVocRaw,'V')} / ${fmt(r.dc.stringVoc,'V')}</td></tr>
+        <tr><td>Vmp รวมต่อสตริง</td><td>${fmt(r.dc.stringVmp,'V')}</td></tr>
+        `}
+        <tr><td>Isc รวมทั้งอาเรย์ (${sc.numStrings} String ขนาน)</td><td>${fmt(r.dc.arrayIsc,'A')}</td></tr>
+        <tr><td>Imp รวมทั้งอาเรย์</td><td>${fmt(r.dc.arrayImp,'A')}</td></tr>
+      </table>
+    </div>
+
+    <div class="calc-group">
+      <div class="ghead"><div class="gicon ac">AC</div><div class="gtitle">AC Side — Inverter Output / Grid Interconnection</div></div>
+      <table class="calc-table">
+        <tr><td>Max AC Output Current (design current)</td><td>${fmt(r.ac.designCurrent,'A')}</td></tr>
+        <tr><td>AC MCB แนะนำ <span style="color:var(--ink-soft);font-weight:400;">(×1)</span></td><td>${r.ac.breakerCalc} A</td></tr>
+        <tr><td>ขนาดสาย AC แนะนำ</td><td>${r.ac.cable.mm2} mm² (พิกัด ${r.ac.cable.a} A)</td></tr>
+        <tr><td>AC Surge Protection Device (SPD) <span style="color:var(--ink-soft);font-weight:400;">(×1)</span></td><td>${r.ac.spd.uc}, In ${r.ac.spd.in}, Imax ${r.ac.spd.imax}</td></tr>
+        <tr><td>AC RCBO (Residual Current Breaker o/c) <span style="color:var(--ink-soft);font-weight:400;">(×1)</span></td><td>${r.ac.rcbo.in} A, ${r.ac.rcbo.poles}, ${r.ac.rcbo.sensitivity}, Icn ${r.ac.rcbo.icn}</td></tr>
+        <tr><td>ชนิด RCBO (Type)</td><td><b>${r.ac.rcbo.type}</b></td></tr>
+        ${!isNaN(r.ac.dcAcCheck.dcAcRatio) ? `<tr><td>กำลัง DC รวมทุก String (จุดบรรจบก่อนออก AC)</td><td>${fmt(r.ac.dcAcCheck.totalDCWp,'Wp')} · อัตราส่วน DC:AC = ${r.ac.dcAcCheck.dcAcRatio.toFixed(2)}</td></tr>` : ''}
+      </table>
+    </div>
+
+    <div class="calc-group">
+      <div class="ghead"><div class="gicon dc">DC</div><div class="gtitle">DC Side — PV String / MPPT <span style="font-weight:400;font-size:12px;color:var(--ink-soft);">(อุปกรณ์ครบชุดต่อสตริง × ${r.dc.numStrings} String)</span></div></div>
+      <table class="calc-table">
+        <tr><td>DC Fuse ต่อสตริง <span style="color:var(--ink-soft);font-weight:400;">(2 ขั้ว/สตริง × ${r.dc.numStrings} = ${r.dc.fuseQty} ชุด)</span></td><td>${isNaN(r.dc.fuseFinal)?'—':r.dc.fuseFinal+' A , '+r.dc.voltageClass}</td></tr>
+        <tr><td>DC MCB ต่อสตริง <span style="color:var(--ink-soft);font-weight:400;">(คำนวณจาก Isc แผงเดี่ยว / ผู้ผลิตแนะนำ / ใช้จริง, ×${r.dc.mcbQty})</span></td><td>${isNaN(r.dc.mcbCalc)?'—':r.dc.mcbCalc+' A'} / ${isNaN(r.dc.mcbSuggested)?'—':r.dc.mcbSuggested+' A'} / <b>${isNaN(r.dc.mcbFinal)?'—':r.dc.mcbFinal+' A'}</b></td></tr>
+        <tr><td>ขนาดสาย DC ต่อสตริง (String Cable)</td><td>${r.dc.stringCable.mm2} mm² (พิกัด ${r.dc.stringCable.a} A)</td></tr>
+        <tr><td>ขนาดสาย DC รวม (Main DC Bus หลังรวมสาย ไปอินเวอร์เตอร์)</td><td>${r.dc.mainDcCable.mm2} mm² (พิกัด ${r.dc.mainDcCable.a} A)</td></tr>
+        <tr><td>DC Surge Protection Device (SPD) ต่อสตริง <span style="color:var(--ink-soft);font-weight:400;">(×${r.dc.spdQty})</span></td><td>${r.dc.spdRating}, In ${r.dc.spdIn}, Imax ${r.dc.spdImax}</td></tr>
+        <tr><td>Max System Voltage อ้างอิง</td><td>${r.dc.maxSysV} VDC</td></tr>
+      </table>
+    </div>
+
+    ${battHtml}
+
+    <div class="actions-row">
+      <button class="btn btn-ghost" onclick="goStep(4)">← กลับไปสรุปข้อมูล</button>
+      <div class="right"><button class="btn btn-primary" onclick="nextStep()">ถัดไป: Single Line Diagram →</button></div>
+    </div>
+  `;
+  return p;
+}
+
+/* ====================== PAGE 6: SINGLE LINE DIAGRAM ====================== */
+// SLD_SHAPES records every primitive drawn while buildSLD() runs, in the exact same coordinates
+// used for the on-screen SVG. This is the single source of truth reused by the DXF (CAD) exporter
+// below, so the exported drawing can never drift from the calculated values shown on screen.
+let SLD_SHAPES = [];
+let SLD_LAST_W = 0, SLD_LAST_H = 0;
+function recShape(s){ SLD_SHAPES.push(s); return s; }
+
+function box(x,y,w,h,label,sub,color){
+  recShape({type:'rect', x,y,w,h, color});
+  recShape({type:'text', x:x+w/2, y:y+h/2-4, text:label, size:12, anchor:'middle', color:'#20242C'});
+  if(sub) recShape({type:'text', x:x+w/2, y:y+h/2+13, text:sub, size:10, anchor:'middle', color:'#5B6270'});
+  return `<g>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="6" fill="#fff" stroke="${color}" stroke-width="2"/>
+    <text x="${x+w/2}" y="${y+h/2-4}" text-anchor="middle" font-family="Segoe UI, sans-serif" font-weight="700" font-size="12" fill="#20242C">${label}</text>
+    ${sub? `<text x="${x+w/2}" y="${y+h/2+13}" text-anchor="middle" font-family="Consolas, monospace" font-size="10" fill="#5B6270">${sub}</text>`:''}
+  </g>`;
+}
+function devTag(x,y,label){
+  const w = Math.max(56, String(label).length*5.9+14);
+  recShape({type:'rect', x:x-w/2, y:y-11, w, h:22, color:'#DAD6CC'});
+  recShape({type:'text', x, y:y+4, text:label, size:9.5, anchor:'middle', color:'#20242C'});
+  return `<g><rect x="${x-w/2}" y="${y-11}" width="${w}" height="22" rx="4" fill="#F7F5F0" stroke="#DAD6CC"/>
+    <text x="${x}" y="${y+4}" text-anchor="middle" font-family="Consolas, monospace" font-size="9.5" fill="#20242C">${label}</text></g>`;
+}
+function hline(x1,x2,y,color){ color=color||'#20242C'; recShape({type:'line',x1,y1:y,x2,y2:y,color}); return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${color}" stroke-width="2"/>`; }
+function vline(x,y1,y2,color){ color=color||'#20242C'; recShape({type:'line',x1:x,y1,x2:x,y2,color}); return `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${color}" stroke-width="2"/>`; }
+function breakerSym(x,y){
+  recShape({type:'line', x1:x,y1:y-10,x2:x,y2:y+10, color:'#C64B3C'});
+  recShape({type:'circle', x, y:y-10, r:2.5, color:'#C64B3C'});
+  recShape({type:'circle', x, y:y+10, r:2.5, color:'#C64B3C'});
+  return `<g><line x1="${x}" y1="${y-10}" x2="${x}" y2="${y+10}" stroke="#C64B3C" stroke-width="3"/><circle cx="${x}" cy="${y-10}" r="2.5" fill="#C64B3C"/><circle cx="${x}" cy="${y+10}" r="2.5" fill="#C64B3C"/></g>`;
+}
+// Records a raw text label (title/subtitle/cable-size annotations) into SLD_SHAPES so it also
+// appears at the identical position in the exported DXF, then returns the matching SVG markup.
+function svgText(x,y,text,opts){
+  opts = opts||{};
+  const size = opts.size||11, anchor = opts.anchor||'start', color = opts.color||'#20242C';
+  const mono = !!opts.mono, weight = opts.weight||'400';
+  recShape({type:'text', x, y, text, size, anchor, color});
+  const fam = mono ? 'Consolas, monospace' : 'Segoe UI, sans-serif';
+  return `<text x="${x}" y="${y}" text-anchor="${anchor}" font-size="${size}" fill="${color}" font-family="${fam}"${weight==='700'?' font-weight="700"':''}>${text}</text>`;
+}
+function svgLine(x1,y1,x2,y2,color){
+  color = color||'#5B6270';
+  recShape({type:'line', x1,y1,x2,y2, color});
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${color}" stroke-width="1.5" stroke-dasharray="4,3"/>`;
+}
+
+function spdShortLabel(uc){
+  const m = String(uc).match(/^[\d.\-]+\s*V(DC)?/i);
+  return m ? m[0].replace(/\s+/g,'') : uc;
+}
+function groundSymbol(x,y){
+  // standard earth/ground symbol: three horizontal bars of decreasing width
+  recShape({type:'line', x1:x-14,y1:y,x2:x+14,y2:y, color:'#5B6270'});
+  recShape({type:'line', x1:x-9,y1:y+5,x2:x+9,y2:y+5, color:'#5B6270'});
+  recShape({type:'line', x1:x-4,y1:y+10,x2:x+4,y2:y+10, color:'#5B6270'});
+  return `<line x1="${x-14}" y1="${y}" x2="${x+14}" y2="${y}" stroke="#5B6270" stroke-width="2"/>
+    <line x1="${x-9}" y1="${y+5}" x2="${x+9}" y2="${y+5}" stroke="#5B6270" stroke-width="2"/>
+    <line x1="${x-4}" y1="${y+10}" x2="${x+4}" y2="${y+10}" stroke="#5B6270" stroke-width="2"/>`;
+}
+// A protective device (SPD) connected in PARALLEL across the line, shunted down to ground — not in series with
+// the current path. Draws: junction dot on the main line -> drop wire -> device box -> drop wire -> ground symbol.
+function shuntBranch(x, yLine, label, sub, color){
+  const bw = 108, bh = 44;
+  const boxTop = yLine + 26;
+  const boxBottom = boxTop + bh;
+  const groundY = boxBottom + 16;
+  let s = '';
+  recShape({type:'circle', x, y:yLine, r:3.2, color:'#20242C'});
+  recShape({type:'line', x1:x,y1:yLine,x2:x,y2:boxTop, color:'#20242C'});
+  s += `<circle cx="${x}" cy="${yLine}" r="3.2" fill="#20242C"/>`;
+  s += `<line x1="${x}" y1="${yLine}" x2="${x}" y2="${boxTop}" stroke="#20242C" stroke-width="2"/>`;
+  s += box(x-bw/2, boxTop, bw, bh, label, sub, color);
+  recShape({type:'line', x1:x,y1:boxBottom,x2:x,y2:groundY, color:'#20242C'});
+  s += `<line x1="${x}" y1="${boxBottom}" x2="${x}" y2="${groundY}" stroke="#20242C" stroke-width="2"/>`;
+  s += groundSymbol(x, groundY);
+  return { svg:s, depth: (groundY + 12) - yLine };
+}
+
+function buildSLD(){
+  SLD_SHAPES = []; // reset the recorder — this run becomes the new single source of truth for both SVG and DXF
+  const pk = state.editedPackage, mp = state.mainProtection, r = state.calcResults || computeProtection();
+  const hasBatt = pk.battBrand !== '-';
+  const acc = state.accessories || {gateway:false, optimizer:false};
+  const y = acc.gateway ? 195 : 150; // extra headroom reserved above the inverter when a Gateway box is shown
+  const GAP = 52;      // plain wire gap (also clears a floating tag's half-width on the preceding device)
+  const GAP_TAG = 60;  // wire gap before a device that needs a floating tag above it
+  const GAP_BRANCH = 72; // wire gap on each side of a parallel-shunt (SPD) junction point — must clear the shunt box's half-width
+  let body = '';
+  let cx = 20;
+  let maxBranchDepth = 0;
+
+  // Grid
+  body += box(cx,y-30,90,60,'PEA GRID',mp.voltage?mp.voltage+' V':'', '#20242C');
+  cx += 90;
+  body += hline(cx,cx+GAP_TAG,y); cx+=GAP_TAG;
+  // Main breaker (grid main, user-entered) — series, floating tag
+  body += breakerSym(cx,y); body += devTag(cx,y-30,'Main Brk '+(mp.mainBreaker||'—')+'A');
+  body += hline(cx,cx+GAP,y); cx+=GAP;
+  // AC RCBO (calculated, series) — Type B stated directly on the drawing per IEC 62109-2 / IEC 60364-7-712.
+  // Sits on the grid/consumer-unit side, upstream of the inverter's own dedicated output breaker.
+  body += box(cx,y-24,118,48,`RCBO · ${r.ac.rcbo.type}`, `${r.ac.rcbo.in}A · 30mA · ${r.ac.rcbo.poles.split(' ')[0]}P`, '#20242C');
+  cx += 118;
+  body += hline(cx,cx+GAP_BRANCH,y); cx+=GAP_BRANCH;
+  // AC SPD — connected in PARALLEL (shunt to ground), tapped between the RCBO and the inverter's dedicated AC
+  // MCB, i.e. right after AC MCB when read outward from the inverter. AC MCB upstream of this tap protects the
+  // SPD itself from overcurrent/fault current, as required by IEC 60364-5-53.
+  { const br = shuntBranch(cx, y, 'AC SPD', `${spdShortLabel(r.ac.spd.uc)} · ${r.ac.spd.imax}`, '#F58220');
+    body += br.svg; maxBranchDepth = Math.max(maxBranchDepth, br.depth); }
+  body += hline(cx,cx+GAP_BRANCH,y); cx += GAP_BRANCH;
+  // AC MCB (inverter's dedicated output breaker, calculated, series) — first protective device encountered
+  // leaving the inverter; controls/protects the branch circuit and backs up the AC SPD.
+  body += breakerSym(cx,y); body += devTag(cx,y-30,'AC MCB '+r.ac.breakerCalc+'A');
+  body += hline(cx,cx+GAP,y); cx += GAP;
+  // cable label
+  body += svgText(cx-GAP/2, y+26, r.ac.cable.mm2+'mm²', {size:9.5, anchor:'middle', color:'#5B6270', mono:true});
+  // Inverter
+  body += box(cx,y-38,116,76,'INVERTER',pk.invModel,'#5B2582');
+  const invCx = cx+58;
+  cx += 116;
+
+  // Gateway (optional, communication only — dashed line above inverter)
+  if(acc.gateway){
+    body += svgLine(invCx, y-38, invCx, y-82, '#5B6270');
+    body += box(invCx-58,y-124,116,42,'GATEWAY','Monitoring / WiFi','#5B6270');
+  }
+
+  body += hline(cx,cx+GAP_TAG,y); cx += GAP_TAG;
+  // DC MCB (calculated, series) — one per-string isolator; single-line diagram shows one representative symbol
+  // annotated with the total quantity (xN strings).
+  body += breakerSym(cx,y); body += devTag(cx,y-30,'DC MCB '+(isNaN(r.dc.mcbFinal)?'—':r.dc.mcbFinal)+'A ×'+r.dc.mcbQty);
+  body += hline(cx,cx+GAP_BRANCH,y); cx += GAP_BRANCH;
+  // DC SPD — connected in PARALLEL (shunt to ground), tapped between the DC MCB and the DC Fuse, i.e. at the
+  // string-combiner point. One per string; annotated with quantity on the diagram.
+  { const br = shuntBranch(cx, y, 'DC SPD ×'+r.dc.spdQty, `${r.dc.voltageClass} · ${r.dc.spdImax}`, '#F58220');
+    body += br.svg; maxBranchDepth = Math.max(maxBranchDepth, br.depth); }
+  body += hline(cx,cx+GAP_BRANCH,y); cx += GAP_BRANCH;
+  // DC Fuse (calculated, always installed, series) — 2 per string (both poles); annotated with total quantity.
+  body += breakerSym(cx,y); body += devTag(cx,y-30,'DC Fuse '+(isNaN(r.dc.fuseFinal)?'—':r.dc.fuseFinal)+'A ×'+r.dc.fuseQty);
+  body += hline(cx,cx+GAP,y); cx += GAP;
+  // cable label
+  body += svgText(cx-GAP/2, y+26, r.dc.mainDcCable.mm2+'mm²', {size:9.5, anchor:'middle', color:'#5B6270', mono:true});
+
+  // Optimizer (optional, genuinely in series with the string current — stays in-line on the DC path)
+  if(acc.optimizer){
+    body += box(cx,y-24,110,48,'OPTIMIZER','ต่อทุกแผง/สตริง','#C9660D');
+    cx += 110;
+    body += hline(cx,cx+GAP,y); cx += GAP;
+  }
+
+  // PV array
+  body += box(cx,y-38,140,76,'PV ARRAY',(r.dc.panelsUneven ? r.dc.stringPanelCounts.join('+') : r.dc.numStrings+' Str × '+r.dc.panelsPerString)+' pcs ('+pk.panelWp+'Wp)','#5B2582');
+  cx += 140;
+
+  let extraBottom = 0;
+  if(hasBatt){
+    const by = y + 160;
+    extraBottom = 160;
+    body += vline(invCx, y+38, by-38);
+    body += breakerSym(invCx, y+99); body += devTag(invCx+58, y+99, 'Batt Brk '+(isNaN(r.batt.breaker)?'—':r.batt.breaker)+'A');
+    body += box(invCx-60, by-38, 120, 76, 'BATTERY', pk.battModel, '#C9660D');
+    body += svgText(invCx+70, by, isNaN(r.batt.cable.mm2)?'':r.batt.cable.mm2+'mm²', {size:9.5, anchor:'start', color:'#5B6270', mono:true});
+  }
+
+  const W = cx + 30;
+  const H = y + Math.max(maxBranchDepth + 24, 70 + extraBottom);
+  SLD_LAST_W = W; SLD_LAST_H = H; // remembered so the DXF exporter can flip Y (SVG is Y-down, CAD is Y-up) with the same frame
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, sans-serif">`;
+  svg += `<rect x="0" y="0" width="${W}" height="${H}" fill="#FCFBF8"/>`;
+  svg += svgText(20, 24, `Single Line Diagram — ${state.systemType} / ${mp.phase}`, {size:15, weight:'700', color:'#20242C'});
+  svg += svgText(20, 42, `${pk.invBrand} ${pk.invModel} (${pk.invKw} kW)${acc.gateway?' · Gateway':''}${acc.optimizer?' · Optimizer':''}`, {size:11, color:'#5B6270'});
+  svg += body;
+  svg += `</svg>`;
+  return svg;
+}
+
+/* ====================== DXF (CAD) EXPORT — STANDARD SYMBOL SLD ======================
+   True binary .DWG cannot be produced without Autodesk's proprietary SDK, which isn't available
+   in this environment. .DXF is the open, documented CAD interchange format Autodesk itself defines
+   for this exact purpose: AutoCAD, DWG TrueView, LibreCAD, QCAD, and every mainstream CAD package
+   can open a .dxf directly, and AutoCAD can re-save it as a native .dwg with a single "Save As" —
+   with zero loss of geometry, since DXF is a lossless text description of the same drawing entities.
+
+   Unlike the on-screen SVG (buildSLD(), which stays exactly as-is and keeps using plain labeled boxes
+   for a clean web preview), this exporter draws a genuine technical Single Line Diagram: recognizable
+   IEC 60617 / IEEE 315 -style graphical symbols (breaker, fuse, differential/RCD loop, surge arrester,
+   earth symbol, DC/AC inverter symbol, PV module symbol, battery-cell symbol), real conductor runs,
+   floating equipment tags, cable-size call-outs, a drawing border and a title block — the way a CAD
+   drafter would lay it out. It reads the same calculated state (state.calcResults / editedPackage /
+   mainProtection / accessories) that drives the on-screen page, so values can never drift from what's
+   shown on screen; it just renders them with proper drafting symbols instead of generic boxes.
+   Entity writing itself is delegated to the bundled dxf-writer library (loaded above as `DxfWriter`)
+   rather than hand-built, because real AutoCAD-family software (AutoCAD, DWG TrueView) requires a
+   full $HANDSEED + per-entity handle (group 5) + BLOCK_RECORD/"*Model_Space" table wired up correctly
+   to render anything on open — a hand-rolled minimal DXF can be spec-valid enough for lenient parsers
+   yet still open to a blank screen in AutoCAD itself. The library builds that structure correctly. */
+function buildSLD_DXF(){
+  const pk = state.editedPackage, mp = state.mainProtection, r = state.calcResults || computeProtection();
+  const hasBatt = pk.battBrand !== '-';
+  const acc = state.accessories || {gateway:false, optimizer:false};
+  const d = new DxfWriter();
+
+  // ---- layers: one per discipline, following normal CAD layering convention ----
+  const L = {
+    BUS:'1-POWER-BUS', BRK:'2-PROTECTION', SPD:'3-SPD-EARTHING', GND:'4-EARTHING',
+    SRC:'5-SOURCE', INV:'6-INVERTER', PV:'7-PV-ARRAY', BATT:'8-BATTERY', AUX:'9-AUX-EQUIP',
+    TXT:'TEXT-NOTES', TAG:'TEXT-TAGS', TITLE:'TITLEBLOCK', BORDER:'0-BORDER'
+  };
+  const A = DxfWriter.ACI;
+  // PEA brand colours — Primary purple #5B2582 / Secondary orange #F58220. Written as true 24-bit
+  // colour (DXF group 420) so compliant CAD viewers show the exact PEA hex, with a close ACI index
+  // as a fallback for older readers that ignore true-color.
+  const PEA_PURPLE = 0x5B2582, PEA_ORANGE = 0xF58220, PEA_ORANGE_DARK = 0xC9660D;
+  function addLayer(name, aciFallback, trueColor){
+    d.addLayer(name, aciFallback, 'CONTINUOUS');
+    if(trueColor !== undefined){ d.setActiveLayer(name); d.setTrueColor(trueColor); }
+  }
+  addLayer(L.BUS,    A.WHITE);
+  addLayer(L.BRK,    A.RED);                        // breaker/fuse stays red — universal safety colour
+  addLayer(L.SPD,    202, PEA_ORANGE);               // SPD — PEA secondary orange
+  addLayer(L.GND,    8);
+  addLayer(L.SRC,    A.WHITE);
+  addLayer(L.INV,    172, PEA_PURPLE);               // inverter — PEA primary purple
+  addLayer(L.PV,     172, PEA_PURPLE);               // PV array — PEA primary purple
+  addLayer(L.AUX,    8);
+  if(hasBatt) addLayer(L.BATT, 40, PEA_ORANGE_DARK); // battery/optimizer — darker PEA orange; only needed when this package has a battery
+  addLayer(L.TXT,    A.WHITE);
+  addLayer(L.TAG,    8);
+  addLayer(L.TITLE,  A.WHITE);
+  addLayer(L.BORDER, A.WHITE);
+  const set = name => d.setActiveLayer(name);
+
+  // ---------- generic drafting helpers ----------
+  function txt(x,y,h,s,align,valign,layer){ set(layer||L.TXT); d.drawText(x,y,h,0,String(s),align||'left',valign||'baseline'); }
+  function bus(x1,x2,y){ set(L.BUS); d.drawLine(x1,y,x2,y); }
+  // Floating equipment tag on a short leader stem above the bus (device designation + rating),
+  // matching normal one-line-diagram drafting practice of tagging devices off to the side of the symbol.
+  function leaderTag(x,yBus,text){
+    const stemTop = yBus + 34, w = Math.max(42, String(text).length*3.5+10), h = 15;
+    set(L.TAG);
+    d.drawLine(x, yBus+11, x, stemTop);
+    d.drawRect(x-w/2, stemTop, x+w/2, stemTop+h);
+    txt(x, stemTop+h/2-2.1, 6.2, text, 'center', 'middle', L.TAG);
+  }
+  // IEC 60617-021 / IEEE 315 style circuit breaker: a square straddling the conductor with an
+  // open switch-blade drawn diagonally through it.
+  function breakerSym(x,y,label){
+    set(L.BRK);
+    d.drawRect(x-11,y-11,x+11,y+11);
+    d.drawLine(x-8,y-8,x+8,y+8);
+    if(label) leaderTag(x,y,label);
+  }
+  // Differential/earth-leakage sensing toroid (RCD/RCBO), drawn as a ring around the conductor
+  // immediately downstream of the breaker symbol — standard way of showing residual-current sensing.
+  function rcdRing(x,y){ set(L.BRK); d.drawCircle(x,y,12); }
+  // IEC fuse symbol: an elongated body straddling the conductor.
+  function fuseSym(x,y,label){
+    set(L.BRK);
+    d.drawEllipse(x,y,18,0,0.32);
+    if(label) leaderTag(x,y,label);
+  }
+  // Standard multi-bar earth/ground symbol (IEC 60417-5017).
+  function groundSym(x,y){
+    set(L.GND);
+    d.drawLine(x-16,y,x+16,y);
+    d.drawLine(x-10,y-6,x+10,y-6);
+    d.drawLine(x-4.5,y-12,x+4.5,y-12);
+  }
+  // Surge protective device connected in PARALLEL (shunt) to earth: junction dot on the main bus ->
+  // drop conductor -> arrester body (box with a diode-style diagonal arrow, the usual SPD glyph) ->
+  // drop conductor -> earth symbol. Returns how far below the bus this branch extends, so the sheet
+  // height can be sized to fit it.
+  function spdShunt(x,yBus,label,sub){
+    set(L.SPD);
+    d.drawCircle(x,yBus,2.2);
+    const boxTop = yBus-26, boxW=38, boxH=26;
+    d.drawLine(x,yBus,x,boxTop);
+    d.drawRect(x-boxW/2, boxTop-boxH, x+boxW/2, boxTop);
+    d.drawLine(x-10,boxTop-19,x+10,boxTop-6);
+    d.drawLine(x+10,boxTop-6,x+4.5,boxTop-8);
+    d.drawLine(x+10,boxTop-6,x+8,boxTop-12);
+    const gY = boxTop-boxH-22;
+    d.drawLine(x,boxTop-boxH,x,gY);
+    groundSym(x,gY);
+    txt(x, boxTop-boxH-5, 5.6, label, 'center','top', L.TXT);
+    if(sub) txt(x, gY-17, 5, sub, 'center','top', L.TXT);
+    return yBus - (gY-16);
+  }
+  // IEC 60417 DC symbol: solid bar over three short dashes.
+  function dcGlyph(x,y){ set(L.INV);
+    d.drawLine(x-7,y+3,x+7,y+3);
+    [-4.5,0,4.5].forEach(o=> d.drawLine(x+o-1.4,y-3,x+o+1.4,y-3));
+  }
+  // IEC 60417 AC symbol: a single sine cycle.
+  function acGlyph(x,y){ set(L.INV);
+    const pts=[]; for(let i=0;i<=16;i++){ const t=i/16; pts.push([x-7+t*14, y+Math.sin(t*Math.PI*2)*3.4]); }
+    d.drawPolyline(pts);
+  }
+  // Inverter: box split DC-side | AC-side by a centre divider, each side carrying its IEC glyph —
+  // the standard way one-line diagrams denote a DC/AC power-conversion device.
+  function inverterSym(x,y,w,h,label,sub){
+    set(L.INV);
+    d.drawRect(x,y,x+w,y+h);
+    d.drawLine(x+w/2,y,x+w/2,y+h);
+    dcGlyph(x+w*0.27,y+h*0.62);
+    acGlyph(x+w*0.73,y+h*0.62);
+    txt(x+w/2, y+h*0.30, 6.2, label, 'center','middle', L.TXT);
+    if(sub) txt(x+w/2, y-9, 5, sub, 'center','top', L.TXT);
+  }
+  // PV module symbol: panel outline with a cell grid, plus sun-ray arrows striking it from above-left —
+  // the recognizable IEC solar-module glyph rather than a plain labeled box.
+  function pvSym(x,y,w,h,label,sub){
+    set(L.PV);
+    d.drawRect(x,y,x+w,y+h);
+    for(let i=1;i<3;i++) d.drawLine(x+w*i/3,y,x+w*i/3,y+h);
+    d.drawLine(x,y+h/2,x+w,y+h/2);
+    for(const o of [-0.55,0,0.55]) d.drawLine(x+w*0.5+o*w*0.5-6, y+h+16, x+w*0.5+o*w*0.5+6, y+h+4);
+    txt(x+w/2, y-3, 5.6, label, 'center','top', L.TXT);
+    if(sub) txt(x+w/2, y-16, 4.8, sub, 'center','top', L.TXT);
+  }
+  // Battery symbol: repeated long-thin/short-thick bar pairs — the standard multi-cell battery glyph —
+  // inside a labeled enclosure.
+  function battSym(x,y,w,h,label,sub){
+    set(L.BATT);
+    d.drawRect(x,y,x+w,y+h);
+    const cy=y+h*0.58;
+    [-10,-2,6].forEach((o,i)=>{
+      if(i%2===0){ d.drawLine(x+w/2+o,cy-9,x+w/2+o,cy+9); }
+      else       { d.drawLine(x+w/2+o,cy-5,x+w/2+o,cy+5); }
+    });
+    txt(x+w/2, y+h*0.20, 6, label, 'center','middle', L.TXT);
+    if(sub) txt(x+w/2, y-9, 5, sub, 'center','top', L.TXT);
+  }
+  function auxBox(x,y,w,h,label,sub){
+    set(L.AUX); d.drawRect(x,y,x+w,y+h);
+    txt(x+w/2, y+h*0.58, 5.4, label, 'center','middle', L.TXT);
+    if(sub) txt(x+w/2, y+h*0.30, 4.4, sub, 'center','middle', L.TXT);
+  }
+  function cableLabel(x,y,text){ txt(x,y,4.6,text,'center','middle',L.TXT); }
+  function dashedLink(x1,y1,x2,y2){
+    set(L.AUX);
+    const dx=x2-x1, dy=y2-y1, len=Math.hypot(dx,dy), n=Math.max(2,Math.round(len/6));
+    for(let i=0;i<n;i+=2){ d.drawLine(x1+dx*i/n, y1+dy*i/n, x1+dx*Math.min(i+1,n)/n, y1+dy*Math.min(i+1,n)/n); }
+  }
+
+  // ================= LAYOUT (mirrors the on-screen SLD's device order) =================
+  const Y = 320;
+  let cx = 90;
+  const GAP=50, GAP_TAG=64, GAP_BR=92;
+
+  // Utility source: circle with an AC sine glyph — standard "AC supply/utility" one-line symbol.
+  set(L.SRC); d.drawCircle(cx+32,Y,32);
+  { const pts=[]; for(let i=0;i<=16;i++){ const t=i/16; pts.push([cx+18+t*28, Y+Math.sin(t*Math.PI*2)*6]); } d.drawPolyline(pts); }
+  txt(cx+32, Y-49, 6.4, 'PEA/MEA GRID', 'center','top', L.TXT);
+  if(mp.voltage) txt(cx+32, Y-62, 5.2, mp.voltage+' V', 'center','top', L.TXT);
+  cx += 64;
+  bus(cx,cx+GAP_TAG,Y); cx+=GAP_TAG;
+
+  breakerSym(cx,Y,'Main Brk '+(mp.mainBreaker||'—')+'A'); cx+=0;
+  bus(cx,cx+GAP,Y); cx+=GAP;
+
+  breakerSym(cx,Y,`RCBO ${r.ac.rcbo.type} ${r.ac.rcbo.in}A·30mA·${r.ac.rcbo.poles.split(' ')[0]}P`);
+  rcdRing(cx+22,Y);
+  bus(cx,cx+22+GAP_BR,Y); cx+=22+GAP_BR;
+
+  { const dep = spdShunt(cx,Y,'AC SPD', `${spdShortLabel(r.ac.spd.uc)} · ${r.ac.spd.imax}`); }
+  bus(cx,cx+GAP_BR,Y); cx+=GAP_BR;
+
+  breakerSym(cx,Y,'AC MCB '+r.ac.breakerCalc+'A');
+  bus(cx,cx+GAP,Y); cx+=GAP;
+  cableLabel(cx-GAP/2, Y-20, r.ac.cable.mm2+' mm²');
+
+  const invW=130, invH=70;
+  inverterSym(cx,Y-invH/2,invW,invH,'INVERTER',pk.invBrand+' '+pk.invModel+' ('+pk.invKw+' kW)');
+  const invCx = cx+invW/2;
+  cx += invW;
+
+  if(acc.gateway){
+    dashedLink(invCx, Y+invH/2, invCx, Y+invH/2+44);
+    auxBox(invCx-50, Y+invH/2+44, 100, 36, 'GATEWAY', 'Monitoring / WiFi');
+  }
+
+  bus(cx,cx+GAP_TAG,Y); cx+=GAP_TAG;
+  breakerSym(cx,Y,'DC MCB '+(isNaN(r.dc.mcbFinal)?'—':r.dc.mcbFinal)+'A ×'+r.dc.mcbQty);
+  bus(cx,cx+GAP_BR,Y); cx+=GAP_BR;
+
+  spdShunt(cx,Y,'DC SPD ×'+r.dc.spdQty, `${r.dc.voltageClass} · ${r.dc.spdImax}`);
+  bus(cx,cx+GAP_BR,Y); cx+=GAP_BR;
+
+  fuseSym(cx,Y,'DC Fuse '+(isNaN(r.dc.fuseFinal)?'—':r.dc.fuseFinal)+'A ×'+r.dc.fuseQty);
+  bus(cx,cx+GAP,Y); cx+=GAP;
+  cableLabel(cx-GAP/2, Y-20, r.dc.mainDcCable.mm2+' mm²');
+
+  if(acc.optimizer){
+    auxBox(cx,Y-26,100,52,'OPTIMIZER','ต่อทุกแผง/สตริง');
+    cx += 100;
+    bus(cx,cx+GAP,Y); cx += GAP;
+  }
+
+  const pvW=140, pvH=70;
+  pvSym(cx,Y-pvH/2,pvW,pvH,'PV ARRAY',
+    (r.dc.panelsUneven ? r.dc.stringPanelCounts.join('+') : r.dc.numStrings+' Str × '+r.dc.panelsPerString)+' pcs ('+pk.panelWp+'Wp)');
+  cx += pvW;
+
+  let bottomExtra = 60;
+  if(hasBatt){
+    const bY = Y-210, bW=130, bH=70;
+    set(L.BATT); d.drawLine(invCx, Y-invH/2, invCx, bY+bH);
+    breakerSym(invCx, Y-invH/2-40, 'Batt Brk '+(isNaN(r.batt.breaker)?'—':r.batt.breaker)+'A');
+    battSym(invCx-bW/2, bY, bW, bH, 'BATTERY', pk.battModel);
+    if(!isNaN(r.batt.cable.mm2)) cableLabel(invCx+bW/2+30, bY+bH/2, r.batt.cable.mm2+' mm²');
+    bottomExtra = Y-(bY-40);
+  }
+
+  // ================= SHEET BORDER + TITLE BLOCK =================
+  // The diagram is centred on a generously oversized sheet: horizontal padding is symmetric
+  // (marginSide on both left and right) and vertical padding is symmetric too (marginV on both
+  // top and bottom), so the drawing sits in the middle of the page with plenty of clear space
+  // around every label — nothing crowds the edges or another symbol's text.
+  const legendRowH = 19, legendRows = [
+    ['brk','Breaker (MCB/MCCB/RCBO)'], ['fuse','Fuse'], ['spd','Surge arrester (SPD)'],
+    ['gnd','Earth / ground'], ['inv','Inverter (DC/AC)'],
+    ...(hasBatt ? [['batt','Battery cell']] : []), // only listed when this package actually has a battery
+  ];
+  const legendH = legendRowH*legendRows.length + 30;
+  const titleBlockH = 76;
+  const contentW = cx - 90;                       // drawn diagram width (from first to last symbol)
+  const marginSide = Math.max(140, contentW*0.10); // symmetric left/right padding, scales with drawing size
+  // marginV is applied equally above and below the main bus line (Y), so the whole page is
+  // vertically centred on the diagram itself rather than on whichever side happens to have more content.
+  const marginV = Math.max(bottomExtra+70, legendH+50, titleBlockH+50, 190);
+  const pageBottom = Y-marginV, pageTop = Y+marginV;
+  const left = 90-marginSide, right = cx+marginSide;
+  set(L.BORDER);
+  d.drawRect(left, pageBottom, right, pageTop);
+  d.drawRect(left+10, pageBottom+10, right-10, pageTop-10);
+
+  txt(left+22, pageTop-30, 10.5, `SINGLE LINE DIAGRAM (SLD) — ${state.systemType} / ${mp.phase}`, 'left','baseline', L.TXT);
+  txt(left+22, pageTop-47, 6.4, 'Graphical symbols per IEC 60617 / IEEE 315 convention · NOT TO SCALE', 'left','baseline', L.TXT);
+
+  // Compact symbol legend, bottom-left of the sheet — clear of both the diagram and the title block.
+  const lgX = left+22, lgTop = pageBottom+22+legendH;
+  set(L.TXT); d.drawRect(lgX-10, pageBottom+22, lgX+215, lgTop);
+  txt(lgX-2, lgTop-15, 6.2, 'LEGEND', 'left','baseline', L.TXT);
+  legendRows.forEach((row,i)=>{
+    const ry = lgTop-28-legendRowH*i;
+    const ix = lgX+10;
+    if(row[0]==='brk') breakerSym(ix,ry,'');
+    else if(row[0]==='fuse') fuseSym(ix,ry,'');
+    else if(row[0]==='spd'){ set(L.SPD); d.drawRect(ix-10,ry-8,ix+10,ry+8); d.drawLine(ix-6,ry-5,ix+6,ry+4); }
+    else if(row[0]==='gnd') groundSym(ix,ry);
+    else if(row[0]==='inv'){ dcGlyph(ix,ry+3); }
+    else if(row[0]==='batt'){ set(L.BATT); d.drawLine(ix-4,ry-6,ix-4,ry+6); d.drawLine(ix+3,ry-3.5,ix+3,ry+3.5); }
+    txt(ix+24, ry, 5.4, row[1], 'left','middle', L.TXT);
+  });
+
+  // Title block, bottom-right — standard drafting practice.
+  const tbW = 360, tbH = titleBlockH, tbX = right-10-tbW, tbY = pageBottom+22;
+  set(L.TITLE);
+  d.drawRect(tbX, tbY, tbX+tbW, tbY+tbH);
+  d.drawLine(tbX, tbY+tbH-22, tbX+tbW, tbY+tbH-22);
+  d.drawLine(tbX+tbW*0.55, tbY, tbX+tbW*0.55, tbY+tbH-22);
+  txt(tbX+8, tbY+tbH-10, 7.2, 'PEA EASYD — SINGLE LINE DIAGRAM', 'left','baseline', L.TXT);
+  txt(tbX+8, tbY+tbH-42, 5.6, `${state.systemType} · ${mp.phase} · ${pk.invKw} kW`, 'left','baseline', L.TXT);
+  txt(tbX+tbW*0.55+8, tbY+tbH-42, 5.6, `DATE: ${new Date().toLocaleDateString()}`, 'left','baseline', L.TXT);
+  txt(tbX+8, tbY+10, 5, 'SCALE: NTS   DWG: SLD-01   REV: A', 'left','baseline', L.TXT);
+
+  return d.toDxfString();
+}
+
+function downloadSLD_DXF(){
+  const content = buildSLD_DXF();
+  const blob = new Blob([content], {type:'application/dxf'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `SLD_${(state.systemType||'solar').replace(/\s+/g,'_')}.dxf`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function deviceScheduleHTML(includeHeader){
+  if(includeHeader === undefined) includeHeader = true;
+  const r = state.calcResults || computeProtection();
+  const rows = [
+    { name:'DC SPD',  spec:`${r.dc.voltageClass} (Type 2, PV), In ${r.dc.spdIn}, Imax ${r.dc.spdImax}`, qty:r.dc.spdQty },
+    { name:'DC MCB',  spec:`${isNaN(r.dc.mcbFinal)?'—':r.dc.mcbFinal+' A'}`, qty:r.dc.mcbQty },
+    { name:'DC Fuse', spec:`${isNaN(r.dc.fuseFinal)?'—':r.dc.fuseFinal+' A'}, ${r.dc.voltageClass}`, qty:r.dc.fuseQty },
+    ...(r.batt ? [{ name:'Battery Breaker', spec:`${isNaN(r.batt.breaker)?'—':r.batt.breaker+' A'} (DC MCB)`, qty:1 }] : []),
+    { name:'AC MCB',  spec:`${r.ac.breakerCalc} A`, qty:1 },
+    { name:'AC SPD',  spec:`${r.ac.spd.uc}, In ${r.ac.spd.in}, Imax ${r.ac.spd.imax}`, qty:1 },
+    { name:'AC RCBO', spec:`${r.ac.rcbo.in} A, ${r.ac.rcbo.poles}, ${r.ac.rcbo.sensitivity}, ${r.ac.rcbo.type}, Icn ${r.ac.rcbo.icn}`, qty:1 },
+  ];
+  return `<div class="card">
+    ${includeHeader ? '<h3>รายการอุปกรณ์ป้องกันที่ใช้ในระบบ (Protection Device Schedule) <span>จำนวนฝั่ง DC อ้างอิงตามจำนวน String</span></h3>' : ''}
+    <table class="dtable">
+      <tr><th style="width:18%;">อุปกรณ์</th><th>สเปก</th><th style="width:10%;">จำนวน</th></tr>
+      ${rows.map(row=>`<tr><th style="width:18%;">${row.name}</th><td><b style="font-family:var(--font-mono);">${row.spec}</b></td><td><b>${row.qty}</b></td></tr>`).join('')}
+    </table>
+  </div>`;
+}
+
+function renderPage6(){
+  const p = el(`<div class="page active" id="p6"></div>`);
+  if(!state.editedPackage){
+    p.innerHTML = `<div class="empty">กรุณาเลือกแพ็คเก็จอุปกรณ์ก่อน</div>`;
+    return p;
+  }
+  if(!state.calcResults) state.calcResults = computeProtection();
+  p.innerHTML = `
+    <h2 class="page-title">Single Line Diagram (SLD)</h2>
+    <p class="page-desc">แผนภาพเส้นเดียวสร้างขึ้นอัตโนมัติจากข้อมูลแพ็คเก็จและผลการคำนวณ สามารถพิมพ์แนบไปกับรายงานได้ในขั้นตอนถัดไป</p>
+    <div class="sld-wrap">${buildSLD()}</div>
+    ${deviceScheduleHTML()}
+    <div class="actions-row">
+      <button class="btn btn-ghost" onclick="goStep(5)">← กลับไปคำนวณ MCB</button>
+      <div class="right">
+        <button class="btn btn-ghost" onclick="downloadSLD_DXF()" title="ไฟล์ CAD มาตรฐานเปิด (.dxf) — เปิดได้ตรงใน AutoCAD/LibreCAD/QCAD หรือ Save As เป็น .dwg ได้ในคลิกเดียว โดยขนาดอุปกรณ์ทุกชิ้นอิงตามผลคำนวณเดียวกับที่แสดงบนหน้าจอ">⬇ ดาวน์โหลด CAD (.dxf)</button>
+        <button class="btn btn-primary" onclick="nextStep()">ถัดไป: จัดทำรายงาน →</button>
+      </div>
+    </div>
+  `;
+  return p;
+}
+
+/* Builds the concise "must-purchase" MCB/cable table for the report (section 3).
+   Only rows with a real, calculable value are included — nothing is shown for items
+   that don't apply to this system (e.g. no battery) or that failed to calculate (NaN/'—').
+   Keeps the same underlying fixed/calculated values as the rest of the app; this only
+   trims the presentation down to: กลุ่ม / อุปกรณ์ / ขนาด-พิกัด / จำนวนที่ต้องใช้. */
+function buildProcurementTable(r){
+  const rows = []; // [group, item, spec, qty]
+  rows.push(['AC', 'AC MCB', `${r.ac.breakerCalc} A`, 1]);
+  rows.push(['AC', 'AC SPD', `${r.ac.spd.uc}, In ${r.ac.spd.in}, Imax ${r.ac.spd.imax}`, 1]);
+  rows.push(['AC', 'AC RCBO', `${r.ac.rcbo.in} A, ${r.ac.rcbo.poles}, ${r.ac.rcbo.sensitivity}, ${r.ac.rcbo.type}, Icn ${r.ac.rcbo.icn}`, 1]);
+  rows.push(['AC', 'สาย AC', `${r.ac.cable.mm2} mm²`, 1]);
+  if(!isNaN(r.dc.fuseFinal)) rows.push(['DC', 'DC Fuse (2 ขั้ว/สตริง)', `${r.dc.fuseFinal} A, ${r.dc.voltageClass}`, r.dc.fuseQty]);
+  if(!isNaN(r.dc.mcbFinal)) rows.push(['DC', 'DC MCB', `${r.dc.mcbFinal} A`, r.dc.mcbQty]);
+  rows.push(['DC', 'DC SPD', `${r.dc.spdRating}, In ${r.dc.spdIn}, Imax ${r.dc.spdImax}`, r.dc.spdQty]);
+  rows.push(['DC', 'สาย DC ต่อสตริง', `${r.dc.stringCable.mm2} mm²`, r.dc.numStrings]);
+  rows.push(['DC', 'สาย DC รวม', `${r.dc.mainDcCable.mm2} mm²`, 1]);
+  if(r.batt && !isNaN(r.batt.breaker)) rows.push(['Battery', 'Battery Main Breaker', `${r.batt.breaker} A`, 1]);
+  if(r.batt) rows.push(['Battery', 'สาย Battery', `${r.batt.cable.mm2} mm²`, 1]);
+
+  // Grouped as colour-coded cards (same AC=teal / DC=amber / Battery=violet coding used
+  // on the MCB calculation page) so the purchasing list reads at a glance by circuit side.
+  const groupDefs = [
+    {key:'AC', cls:'ac', label:'ฝั่ง AC', icon:'⚡'},
+    {key:'DC', cls:'dc', label:'ฝั่ง DC (อ้างอิงจำนวน String)', icon:'☀'},
+    {key:'Battery', cls:'batt', label:'ฝั่ง Battery', icon:'🔋'},
+  ];
+  let html = '';
+  groupDefs.forEach(g=>{
+    const grows = rows.filter(x=>x[0]===g.key);
+    if(!grows.length) return; // nothing to buy in this group — omit entirely, no empty section
+    html += `<div class="rgroup ${g.cls}"><div class="rg-head"><span>${g.icon} ${g.label}</span><span class="rg-count">${grows.length} รายการ</span></div>`;
+    grows.forEach(row=>{
+      html += `<div class="ritem"><div class="ri-name">${row[1]}</div><div class="ri-spec">${row[2]}</div><div class="ri-qty">× ${row[3]}</div></div>`;
+    });
+    html += `</div>`;
+  });
+  return html;
+}
+
+/* ====================== PAGE 7: REPORT ====================== */
+function renderPage7(){
+  const p = el(`<div class="page active" id="p7"></div>`);
+  if(!state.editedPackage){
+    p.innerHTML = `<div class="empty">กรุณาเลือกแพ็คเก็จอุปกรณ์ก่อน</div>`;
+    return p;
+  }
+  if(!state.calcResults) state.calcResults = computeProtection();
+  const pk = state.editedPackage, mp = state.mainProtection, r = state.calcResults;
+  const today = new Date().toLocaleDateString('th-TH', {year:'numeric', month:'long', day:'numeric'});
+
+  p.innerHTML = `
+    <div class="no-print" style="margin-bottom:16px;">
+      <p class="page-desc" style="margin:0;">รายงานฉบับสมบูรณ์สำหรับพิมพ์หรือบันทึกเป็น PDF (ใช้ปุ่มพิมพ์ด้านล่างสุดของหน้า)</p>
+    </div>
+    <div class="report" id="reportRoot">
+      <div class="rhead">
+        <div>
+          <div class="logo">☀ PEA EasyD</div>
+          <div class="tagline">AI-Enabled Engineering Design and Project Management of Solar PV Systems</div>
+        </div>
+        <div class="meta">วันที่ออกรายงาน: <b>${today}</b><br>เอกสารอ้างอิง: <b>PEA Design Guideline / IEC 60364</b></div>
+      </div>
+
+      <h3 class="rsec"><span class="rnum">1</span> ข้อมูลทั่วไปของระบบ</h3>
+      <div class="rspec-strip">
+        <div class="rspec-item"><div class="rk">ประเภทระบบ</div><div class="rv">${state.systemType}</div></div>
+        <div class="rspec-item"><div class="rk">Phase</div><div class="rv">${mp.phase}</div></div>
+        <div class="rspec-item"><div class="rk">System Voltage</div><div class="rv">${mp.voltage||'—'} V</div></div>
+        <div class="rspec-item"><div class="rk">Main Breaker</div><div class="rv">${mp.mainBreaker||'—'} A</div></div>
+        <div class="rspec-item"><div class="rk">RCCB / ELCB</div><div class="rv">${mp.rccb||'—'}</div></div>
+        <div class="rspec-item"><div class="rk">สาย Main (Grid side)</div><div class="rv">${mp.mainCableSize||'—'} mm²</div></div>
+      </div>
+
+      <h3 class="rsec"><span class="rnum">2</span> ข้อมูลอุปกรณ์หลัก (Package)</h3>
+      <div class="req-grid">
+        <div class="req-card inv">
+          <div class="rc-head">⚡ Inverter</div>
+          <div class="rc-body">
+            <div class="req-row"><span class="rk">ยี่ห้อ / รุ่น</span><span class="rv">${pk.invBrand} ${pk.invModel}</span></div>
+            <div class="req-row"><span class="rk">กำลัง</span><span class="rv">${pk.invKw} kW</span></div>
+            <div class="req-row"><span class="rk">Max AC Output Current</span><span class="rv">${pk.maxACCurrent} A</span></div>
+            <div class="req-row"><span class="rk">AC Output Voltage</span><span class="rv">${pk.acVoltage} V</span></div>
+            <div class="req-row"><span class="rk">Max DC Input Voltage</span><span class="rv">${pk.maxDCVoltage} V</span></div>
+            <div class="req-row"><span class="rk">Max PV SC Current</span><span class="rv">${pk.maxPVSCCurrent}</span></div>
+          </div>
+        </div>
+        ${pk.battBrand!=='-' ? `
+        <div class="req-card batt">
+          <div class="rc-head">🔋 Battery</div>
+          <div class="rc-body">
+            <div class="req-row"><span class="rk">ยี่ห้อ / รุ่น</span><span class="rv">${pk.battBrand} ${pk.battModel}</span></div>
+            <div class="req-row"><span class="rk">ความจุ</span><span class="rv">${pk.battKwh} kWh</span></div>
+            <div class="req-row"><span class="rk">Max Charge Current</span><span class="rv">${pk.maxChargeCurrent} A</span></div>
+            <div class="req-row"><span class="rk">Max Discharge Current</span><span class="rv">${pk.maxDischargeCurrent} A</span></div>
+            <div class="req-row"><span class="rk">แรงดัน</span><span class="rv">${pk.battVoltage} V</span></div>
+          </div>
+        </div>` : ''}
+        <div class="req-card pv">
+          <div class="rc-head">☀ Solar Panel</div>
+          <div class="rc-body">
+            <div class="req-row"><span class="rk">ยี่ห้อ / รุ่น</span><span class="rv">${pk.panelBrand} ${pk.panelModel}</span></div>
+            <div class="req-row"><span class="rk">จำนวน</span><span class="rv">${pk.panelQty} แผง</span></div>
+            <div class="req-row"><span class="rk">กำลังรวม</span><span class="rv">${pk.panelTotalWp} Wp</span></div>
+            <div class="req-row"><span class="rk">Voc / Isc</span><span class="rv">${pk.voc} / ${pk.isc}</span></div>
+            <div class="req-row"><span class="rk">Vmp / Imp</span><span class="rv">${pk.vmp} / ${pk.imp}</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="rstring-strip">
+        <div><span class="rk">String / แผงต่อสตริง</span><span class="rv">${r.dc.panelsUneven ? r.dc.numStrings+' String ('+r.dc.stringPanelCounts.join('+')+' แผง)' : r.dc.numStrings+' String × '+r.dc.panelsPerString+' แผง'}</span></div>
+        <div><span class="rk">Voc รวมต่อสตริง (×1.15)</span><span class="rv">${fmt(r.dc.stringVoc,'V')}</span></div>
+        <div><span class="rk">Isc รวมทั้งอาเรย์</span><span class="rv">${fmt(r.dc.arrayIsc,'A')}</span></div>
+        <div><span class="rk">Imp รวมทั้งอาเรย์</span><span class="rv">${fmt(r.dc.arrayImp,'A')}</span></div>
+      </div>
+
+      <h3 class="rsec"><span class="rnum">3</span> รายการขนาดอุปกรณ์ MCB และขนาดสายที่ต้องจัดซื้อ</h3>
+      ${buildProcurementTable(r)}
+
+      <p class="rfoot-note">
+        รายงานนี้สร้างโดยระบบ AI-Enabled Engineering Design Tool เพื่อใช้เป็นแนวทางเบื้องต้นในการออกแบบเท่านั้น ค่าที่คำนวณได้อ้างอิงหลักปฏิบัติทั่วไปตาม IEC 60364 และแนวทางของการไฟฟ้าส่วนภูมิภาค (PEA)
+        ผู้ออกแบบต้องตรวจสอบพิกัดอุปกรณ์จริงกับข้อกำหนดล่าสุดของการไฟฟ้าในพื้นที่ และให้วิศวกรไฟฟ้าที่ได้รับใบอนุญาตเป็นผู้ลงนามรับรองก่อนนำไปติดตั้งใช้งานจริง
+      </p>
+    </div>
+    <div class="actions-row no-print">
+      <button class="btn btn-ghost" onclick="goStep(6)">← กลับไปดู SLD</button>
+      <div class="right"><button class="btn btn-amber" style="color:#fff;" onclick="window.print()">🖨 พิมพ์ / Save as PDF</button></div>
+    </div>
+  `;
+  return p;
+}
+
+/* ====================== EXCEL PACKAGE IMPORT ====================== */
+// Header matching: normalize a raw Excel header cell (handles multi-line cells like "Inverter \nbrand",
+// stray parentheses, extra spaces) then match it to a package field key using ordered patterns.
+// Short/ambiguous tokens (voc, isc, vmp, imp) use word-boundary regex; descriptive headers use phrase-contains matching.
+function normalizeHeader(h){
+  return String(h==null?'':h).toLowerCase().replace(/[\n\r]+/g,' ').replace(/[()]/g,' ').replace(/\s+/g,' ').trim();
+}
+const EXCEL_HEADER_PATTERNS = [
+  { key:'system', test:h=>/\bsystem\b/.test(h) },
+  { key:'phase', test:h=>/\bphase\b/.test(h) },
+  { key:'invBrand', test:h=>h.includes('inverter brand') },
+  { key:'invModel', test:h=>h.includes('inverter model') },
+  { key:'invKw', test:h=>h.includes('inverter') && h.includes('kw') },
+  { key:'ratedACCurrent', test:h=>h.includes('rated ac current') },
+  { key:'maxACCurrent', test:h=>h.includes('max ac output current') },
+  { key:'acVoltage', test:h=>h.includes('ac output voltage') },
+  { key:'maxDCVoltage', test:h=>h.includes('max dc input voltage') },
+  { key:'dcInputCurrentRated', test:h=>h.includes('dc input current rated') },
+  { key:'maxPVInputCurrent', test:h=>h.includes('max pv input current') },
+  { key:'maxPVSCCurrent', test:h=>h.includes('max pv short circuit current') },
+  { key:'battBrand', test:h=>h.includes('battery brand') },
+  { key:'battModel', test:h=>h.includes('battery model') },
+  { key:'battKwh', test:h=>h.includes('battery') && h.includes('kwh') },
+  { key:'battVoltage', test:h=>h.includes('battery voltage') },
+  { key:'battCapacityAh', test:h=>h.includes('battery capacity') },
+  { key:'maxChargeCurrent', test:h=>h.includes('max charge current') },
+  { key:'maxDischargeCurrent', test:h=>h.includes('max discharge current') },
+  { key:'peakCurrent', test:h=>h.includes('peak current') },
+  { key:'panelBrand', test:h=>h.includes('solar panel brand') },
+  { key:'panelModel', test:h=>h.includes('solar panel') && h.includes('model') },
+  { key:'panelQty', test:h=>h.includes('solar panel') && h.includes('qty') },
+  { key:'panelTotalWp', test:h=>h.includes('solar panel') && h.includes('total') },
+  { key:'panelWp', test:h=>h.includes('solar panel') && h.includes('wp') },
+  { key:'voc', test:h=>/\bvoc\b/.test(h) },
+  { key:'isc', test:h=>/\bisc\b/.test(h) },
+  { key:'vmp', test:h=>/\bvmp\b/.test(h) },
+  { key:'imp', test:h=>/\bimp\b/.test(h) },
+  { key:'maxSystemVoltage', test:h=>h.includes('max system voltage') },
+  { key:'maxSeriesFuse', test:h=>h.includes('max series fuse') },
+  { key:'suggestedDCFuse', test:h=>h.includes('suggested dc fuse') },
+  { key:'suggestedDCMCB', test:h=>h.includes('suggested dc mcb') },
+];
+function mapExcelHeaders(headerRow){
+  const colMap = {}; // key -> column index
+  const used = new Set();
+  headerRow.forEach((raw, idx)=>{
+    const h = normalizeHeader(raw);
+    if(!h) return;
+    for(const p of EXCEL_HEADER_PATTERNS){
+      if(used.has(p.key)) continue;
+      if(p.test(h)){ colMap[p.key] = idx; used.add(p.key); break; }
+    }
+  });
+  return colMap;
+}
+function findHeaderRowIndex(rows){
+  // scan the first few rows for one containing recognizable header tokens (handles a stray title row above the table)
+  for(let i=0;i<Math.min(rows.length,5);i++){
+    const norm = (rows[i]||[]).map(normalizeHeader).join(' | ');
+    if(norm.includes('system') && norm.includes('phase')) return i;
+  }
+  return 0;
+}
+function parseExcelRows(rows){
+  const packages = [];
+  const headerIdx = findHeaderRowIndex(rows);
+  const colMap = mapExcelHeaders(rows[headerIdx] || []);
+  const requiredForRow = ['invBrand','invModel'];
+  const missingCols = PKG_FIELDS.map(f=>f.k).filter(k=>!(k in colMap));
+  let skipped = 0;
+
+  for(let i=headerIdx+1;i<rows.length;i++){
+    const row = rows[i];
+    if(!row || row.every(c=>c===''||c==null)) continue; // blank spacer row
+    const get = (key)=>{
+      const idx = colMap[key];
+      if(idx===undefined) return '';
+      const v = row[idx];
+      return (v===undefined||v===null) ? '' : String(v).trim();
+    };
+    const invBrand = get('invBrand'), invModel = get('invModel');
+    if(!invBrand && !invModel){ skipped++; continue; } // separator / non-data row
+    const pkg = { id: uid(), custom:false, source:'excel' };
+    PKG_FIELDS.forEach(f=>{ const v = get(f.k); pkg[f.k] = v || '-'; });
+    // system/phase are required for filtering — skip row if truly unusable
+    if(pkg.system==='-' || pkg.phase==='-'){ skipped++; continue; }
+    packages.push(pkg);
+  }
+  return { packages, skipped, missingCols, headerIdx };
+}
+
+function handleExcelFile(evt){
+  const file = evt.target.files[0];
+  evt.target.value = '';
+  if(!file) return;
+  if(typeof XLSX === 'undefined'){
+    state.excelImport.status = {type:'err', message:'ไลบรารีอ่านไฟล์ Excel ยังโหลดไม่เสร็จ กรุณาลองใหม่อีกครั้งในอีกสักครู่'};
+    renderExcelImportPanel();
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const sheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      const result = parseExcelRows(rows);
+      if(result.packages.length === 0){
+        state.excelImport = { fileName:null, packages:[], status:{type:'err', message:`ไม่พบข้อมูลแพ็คเก็จที่อ่านได้ในไฟล์ "${file.name}" กรุณาตรวจสอบว่าคอลัมน์ System/Phase/Inverter Brand/Model ถูกต้อง`} };
+      } else {
+        state.excelImport = {
+          fileName: file.name,
+          packages: result.packages,
+          status: {
+            type: result.missingCols.length ? 'warn' : 'ok',
+            message: `นำเข้าสำเร็จ ${result.packages.length} แพ็คเก็จจากชีต "${sheetName}"` +
+              (result.skipped ? ` (ข้าม ${result.skipped} แถวว่าง/ไม่สมบูรณ์)` : '') +
+              (result.missingCols.length ? ` — ไม่พบคอลัมน์: ${result.missingCols.join(', ')} (ใช้ค่า "-" แทน)` : '')
+          }
+        };
+        state.brand = null; state.selectedPackageId = null; state.editedPackage = null;
+      }
+    } catch(err){
+      state.excelImport = { fileName:null, packages:[], status:{type:'err', message:'ไม่สามารถอ่านไฟล์ได้: '+err.message} };
+    }
+    renderExcelImportPanel();
+    render();
+  };
+  reader.onerror = function(){
+    state.excelImport.status = {type:'err', message:'เกิดข้อผิดพลาดขณะอ่านไฟล์'};
+    renderExcelImportPanel();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function removeExcelImport(){
+  state.excelImport = { fileName:null, packages:[], status:{type:'ok', message:'ลบไฟล์ Excel แล้ว — ยังไม่มีแพ็คเก็จในระบบ กรุณานำเข้าไฟล์ใหม่หรือเพิ่มแพ็คเก็จเอง'} };
+  state.brand = null; state.selectedPackageId = null; state.editedPackage = null;
+  renderExcelImportPanel();
+  render();
+}
+
+function renderExcelImportPanel(){
+  const panel = document.getElementById('excelImportPanel');
+  if(!panel) return;
+  const ei = state.excelImport;
+  const statusHtml = ei.status ? `<div class="excel-status ${ei.status.type==='err'?'err':(ei.status.type==='warn'?'warn':'ok')}">${ei.status.message}</div>` : '';
+
+  if(ei.fileName){
+    panel.innerHTML = `
+      <div class="ep-title">แพ็คเก็จจาก Excel</div>
+      <div class="excel-file-card">
+        <div class="fname">📄 ${ei.fileName}</div>
+        <div class="fmeta">${ei.packages.length} แพ็คเก็จที่ใช้งานอยู่</div>
+        <div class="fbtns">
+          <button onclick="document.getElementById('excelFileInput').click()">⭯ เปลี่ยนไฟล์</button>
+          <button class="danger" onclick="removeExcelImport()">✕ ลบไฟล์</button>
+        </div>
+      </div>
+      ${statusHtml}
+      <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none" onchange="handleExcelFile(event)">
+    `;
+  } else {
+    panel.innerHTML = `
+      <div class="ep-title">นำเข้าแพ็คเก็จจาก Excel</div>
+      <div class="excel-drop" onclick="document.getElementById('excelFileInput').click()">
+        <span class="ic">📥</span>
+        ลากไฟล์ หรือคลิกเพื่อเลือกไฟล์ .xlsx<br>คอลัมน์ต้องตรงกับตารางแพ็คเก็จมาตรฐาน
+      </div>
+      ${statusHtml}
+      <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display:none" onchange="handleExcelFile(event)">
+    `;
+  }
+}
+
+/* ====================== EXPORT / IMPORT PROJECT ====================== */
+function exportProject(){
+  const data = JSON.stringify(state, null, 2);
+  const blob = new Blob([data], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'solar-pv-project-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function importProject(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = JSON.parse(e.target.result);
+      state = Object.assign(state, data);
+      if(!state.excelImport) state.excelImport = { fileName:null, packages:[], status:null };
+      if(!state.accessories) state.accessories = { gateway:false, optimizer:false };
+      renderExcelImportPanel();
+      render();
+    }catch(err){
+      alert('ไม่สามารถอ่านไฟล์โปรเจกต์ได้ กรุณาตรวจสอบไฟล์ JSON');
+    }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+
+/* ====================== PRINT: keep only active page visible ====================== */
+window.addEventListener('beforeprint', function(){
+  document.querySelectorAll('.page').forEach(pg=>pg.classList.remove('print-active'));
+  const active = document.querySelector('.page.active');
+  if(active) active.classList.add('print-active');
+});
+
+/* ====================== INIT ====================== */
+renderExcelImportPanel();
+render();
+</script>
+</body>
+</html>
